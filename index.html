@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Emora AI — Emotional Intelligence Companion</title>
+  <meta name="description" content="Emora is an AI-powered emotional companion providing 24/7 empathetic mental health support using multimodal emotion recognition, NLP, and deep learning." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Sora:wght@400;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+  <script src="firebase-config.js"></script>
+  <!-- Auth Guard: redirect to login if no valid session -->
+  <script>
+    (function() {
+      const session = localStorage.getItem('emora_session');
+      const hasUser = localStorage.getItem('emora_has_user');
+      // If localStorage session exists, allow immediately
+      if (session || hasUser) return;
+
+      // If Firebase is configured, wait for its auth state once (max 3s)
+      if (window._firebaseAuth) {
+        let resolved = false;
+        const unsub = window._firebaseAuth.onAuthStateChanged(function(user) {
+          if (resolved) return;
+          resolved = true;
+          unsub(); // stop listening after first callback
+          if (!user) {
+            window.location.replace('auth.html');
+          }
+        });
+        // Safety fallback: if Firebase takes >3s, assume no session
+        setTimeout(function() {
+          if (!resolved) {
+            resolved = true;
+            window.location.replace('auth.html');
+          }
+        }, 3000);
+      } else {
+        // No Firebase — no local session → redirect
+        window.location.replace('auth.html');
+      }
+    })();
+  </script>
+
+</head>
+<body>
+
+  <!-- Ambient background particles -->
+  <div class="ambient-bg" id="ambientBg"></div>
+
+  <!-- Crisis Alert Overlay -->
+  <div class="crisis-overlay hidden" id="crisisOverlay">
+    <div class="crisis-modal">
+      <div class="crisis-icon">🆘</div>
+      <h2>You're Not Alone</h2>
+      <p>Emora has noticed signs of distress in your words. Your wellbeing matters deeply.</p>
+      <div class="crisis-resources">
+        <a href="tel:988" class="crisis-btn primary-crisis">📞 Call / Text 988 (Lifeline)</a>
+        <a href="tel:112" class="crisis-btn secondary-crisis">🚨 Emergency Services (112)</a>
+        <a href="https://www.iCall.iitb.ac.in/" target="_blank" class="crisis-btn secondary-crisis">💬 iCall India Helpline</a>
+      </div>
+      <button class="crisis-close" id="crisisClose">I'm safe, continue talking</button>
+    </div>
+  </div>
+
+  <!-- Mindfulness Modal -->
+  <div class="mindful-overlay hidden" id="mindfulOverlay">
+    <div class="mindful-modal">
+      <button class="mindful-close" id="mindfulClose">✕</button>
+      <div class="mindful-icon">🌿</div>
+      <h2 id="mindfulTitle">Box Breathing Exercise</h2>
+      <div class="breathe-circle" id="breatheCircle">
+        <span id="breatheText">Breathe In</span>
+      </div>
+      <p id="mindfulDesc">Follow the circle. Inhale for 4 counts, hold for 4, exhale for 4, hold for 4.</p>
+      <button class="start-breathe-btn" id="startBreathe">▶ Start Exercise</button>
+    </div>
+  </div>
+
+  <!-- Main Shell -->
+  <div class="shell" id="mainShell">
+
+    <!-- LEFT SIDEBAR -->
+    <aside class="sidebar" id="sidebar">
+
+      <!-- Brand -->
+      <div class="brand">
+        <div class="brand-logo">
+          <div class="logo-pulse"></div>
+          <span class="logo-letter">E</span>
+        </div>
+        <div class="brand-text">
+          <span class="brand-name">Emora AI</span>
+          <span class="brand-tag">Emotional Intelligence v1.0</span>
+        </div>
+      </div>
+
+      <!-- Avatar Section -->
+      <div class="avatar-section">
+        <div class="avatar-stage" id="avatarStage">
+          <div class="avatar-ring ring-1"></div>
+          <div class="avatar-ring ring-2"></div>
+          <div class="avatar-ring ring-3"></div>
+          <div class="avatar-face" id="avatarFace">
+            <div class="av-eye left"></div>
+            <div class="av-eye right"></div>
+            <div class="av-mouth" id="avMouth"></div>
+          </div>
+          <div class="avatar-emotion-badge" id="emotionBadge">😊 Calm</div>
+        </div>
+        <div class="avatar-status">
+          <span class="status-dot active"></span>
+          <span id="statusText">Listening with empathy</span>
+        </div>
+      </div>
+
+      <!-- Emotion Radar -->
+      <div class="sidebar-card">
+        <div class="card-header">
+          <span class="card-icon">🧠</span>
+          <h3>Emotion Analysis</h3>
+          <span class="tech-badge">CNN + NLP</span>
+        </div>
+        <div class="emotion-bars" id="emotionBars">
+          <div class="emotion-bar-row">
+            <span class="emo-label">Joy</span>
+            <div class="emo-track"><div class="emo-fill joy" id="barJoy" style="width:60%"></div></div>
+            <span class="emo-pct" id="pctJoy">60%</span>
+          </div>
+          <div class="emotion-bar-row">
+            <span class="emo-label">Calm</span>
+            <div class="emo-track"><div class="emo-fill calm" id="barCalm" style="width:45%"></div></div>
+            <span class="emo-pct" id="pctCalm">45%</span>
+          </div>
+          <div class="emotion-bar-row">
+            <span class="emo-label">Stress</span>
+            <div class="emo-track"><div class="emo-fill stress" id="barStress" style="width:20%"></div></div>
+            <span class="emo-pct" id="pctStress">20%</span>
+          </div>
+          <div class="emotion-bar-row">
+            <span class="emo-label">Sadness</span>
+            <div class="emo-track"><div class="emo-fill sadness" id="barSadness" style="width:10%"></div></div>
+            <span class="emo-pct" id="pctSadness">10%</span>
+          </div>
+          <div class="emotion-bar-row">
+            <span class="emo-label">Anxiety</span>
+            <div class="emo-track"><div class="emo-fill anxiety" id="barAnxiety" style="width:15%"></div></div>
+            <span class="emo-pct" id="pctAnxiety">15%</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Webcam / Face Detection -->
+      <div class="sidebar-card">
+        <div class="card-header">
+          <span class="card-icon">📷</span>
+          <h3>Facial Emotion</h3>
+          <span class="tech-badge">CNN</span>
+        </div>
+        <div class="cam-container">
+          <video id="webcamFeed" autoplay muted playsinline class="hidden"></video>
+          <canvas id="faceCanvas" class="face-canvas"></canvas>
+          <div class="cam-placeholder" id="camPlaceholder">
+            <div class="cam-icon">📷</div>
+            <p>Enable camera for<br/>facial emotion detection</p>
+          </div>
+          <div class="face-detection-overlay" id="faceDetectionOverlay" style="display:none">
+            <div class="face-box" id="faceBox"></div>
+            <div class="face-label" id="faceLabel">Analyzing...</div>
+          </div>
+        </div>
+        <button class="cam-btn" id="camToggleBtn">🎥 Enable Camera</button>
+        <div class="detected-emotion hidden" id="detectedFaceEmotion">
+          Detected: <strong id="faceEmotionText">—</strong>
+        </div>
+      </div>
+
+      <!-- Wearables / Vitals -->
+      <div class="sidebar-card">
+        <div class="card-header">
+          <span class="card-icon">⌚</span>
+          <h3>Biometric Vitals</h3>
+          <span class="tech-badge">Wearables</span>
+        </div>
+        <div class="vitals-grid">
+          <div class="vital-card">
+            <div class="vital-icon heart">❤️</div>
+            <div class="vital-info">
+              <span class="vital-value" id="heartRate">72</span>
+              <span class="vital-unit">BPM</span>
+            </div>
+            <span class="vital-label">Heart Rate</span>
+          </div>
+          <div class="vital-card">
+            <div class="vital-icon stress-icon">😤</div>
+            <div class="vital-info">
+              <span class="vital-value" id="stressLevel">Low</span>
+            </div>
+            <span class="vital-label">Stress Level</span>
+          </div>
+          <div class="vital-card">
+            <div class="vital-icon">😴</div>
+            <div class="vital-info">
+              <span class="vital-value" id="sleepScore">7.2</span>
+              <span class="vital-unit">hrs</span>
+            </div>
+            <span class="vital-label">Sleep</span>
+          </div>
+          <div class="vital-card">
+            <div class="vital-icon">🧘</div>
+            <div class="vital-info">
+              <span class="vital-value" id="hrvScore">68</span>
+              <span class="vital-unit">ms</span>
+            </div>
+            <span class="vital-label">HRV</span>
+          </div>
+        </div>
+        <div class="heart-wave" id="heartWave">
+          <canvas id="heartCanvas" width="200" height="40"></canvas>
+        </div>
+      </div>
+
+      <!-- Companion Mode -->
+      <div class="sidebar-card">
+        <div class="card-header">
+          <span class="card-icon">🤝</span>
+          <h3>Support Mode</h3>
+        </div>
+        <div class="mode-grid" id="modeGrid">
+          <button class="mode-btn active" data-mode="companion" id="modeBtn-companion">🫂 Companion</button>
+          <button class="mode-btn" data-mode="therapist" id="modeBtn-therapist">🧠 Therapist</button>
+          <button class="mode-btn" data-mode="coach" id="modeBtn-coach">💪 Life Coach</button>
+          <button class="mode-btn" data-mode="mindful" id="modeBtn-mindful">🧘 Mindfulness</button>
+        </div>
+      </div>
+
+      <!-- Memory Panel -->
+      <div class="sidebar-card">
+        <div class="card-header">
+          <span class="card-icon">🔬</span>
+          <h3>User Profile</h3>
+          <span class="tech-badge">RL</span>
+        </div>
+        <div class="memory-list" id="memoryList">
+          <div class="mem-item"><span class="mem-key">Name</span><span class="mem-val" id="memName">Learning...</span></div>
+          <div class="mem-item"><span class="mem-key">Mood</span><span class="mem-val" id="memMood">—</span></div>
+          <div class="mem-item"><span class="mem-key">Interests</span><span class="mem-val" id="memInterests">—</span></div>
+          <div class="mem-item"><span class="mem-key">Sessions</span><span class="mem-val" id="memSessions">1</span></div>
+          <div class="mem-item"><span class="mem-key">Risk Level</span><span class="mem-val safe" id="memRisk">Safe ✓</span></div>
+        </div>
+      </div>
+
+    </aside>
+
+    <!-- MAIN CHAT AREA -->
+    <main class="chat-main">
+
+      <!-- Top Header -->
+      <header class="chat-header">
+        <div class="header-left">
+          <button class="sidebar-toggle" id="sidebarToggle">☰</button>
+          <div class="header-title">
+            <h1>Emora <span class="gradient-text">Emotional AI</span></h1>
+            <p class="header-sub">Multimodal Emotion-Aware Companion · End-to-End Encrypted</p>
+          </div>
+        </div>
+        <div class="header-actions">
+          <div class="user-greeting" id="userGreeting">
+            <span class="ug-dot"></span>
+            <span id="greetingName">Loading...</span>
+          </div>
+          <a href="chat.html" class="hdr-btn" id="talkBtn" title="Talk with Emora" style="background:linear-gradient(135deg,#8b5cf6,#06b6d4);color:white;border-color:transparent;font-weight:600;display:flex;align-items:center;gap:5px;">🤖 Talk to Emora</a>
+          <a href="chat.html" class="hdr-btn" id="voiceCallHdrBtn" title="Voice Call" style="background:rgba(16,185,129,0.15);border-color:rgba(16,185,129,0.35);color:#34d399;">🎙️ Voice</a>
+          <a href="chat.html" class="hdr-btn" id="videoCallHdrBtn" title="Video Call" style="background:rgba(6,182,212,0.15);border-color:rgba(6,182,212,0.35);color:#22d3ee;">📹 Video</a>
+          <button class="hdr-btn" id="mindfulBtn" title="Mindfulness Exercise">🧘 Breathe</button>
+           <button class="hdr-btn danger" id="resetBtn" title="Reset Session">🔄 Reset</button>
+          <a href="profile.html" class="avatar-pill" id="profilePill" title="My Profile">
+            <span class="avatar-pill-icon" id="avatarPillIcon">?</span>
+            <span class="avatar-pill-label">My Profile</span>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+          </a>
+          <button class="hdr-btn signout" id="logoutBtn" title="Sign Out" onclick="handleLogout()">🚪 Sign Out</button>
+          
+        </div>
+      </header>
+
+      <!-- Tech Stack Banner -->
+      
+
+      <!-- NLP Processing indicator -->
+      <div class="nlp-indicator hidden" id="nlpIndicator">
+        <div class="nlp-steps">
+          <div class="nlp-step active" id="nlpStep1"><span class="step-dot"></span>Tokenizing input</div>
+          <div class="nlp-step" id="nlpStep2"><span class="step-dot"></span>Sentiment analysis</div>
+          <div class="nlp-step" id="nlpStep3"><span class="step-dot"></span>Emotion classification</div>
+          <div class="nlp-step" id="nlpStep4"><span class="step-dot"></span>Generating response</div>
+        </div>
+      </div>
+
+      <!-- Chat Log -->
+      <section class="chat-log" id="chatLog" aria-live="polite" aria-label="Conversation"></section>
+
+      <!-- Suggested Prompts -->
+      <div class="suggestions" id="suggestions">
+        <button class="suggestion-chip" data-text="I've been feeling really anxious lately and can't seem to calm down.">😰 I'm feeling anxious</button>
+        <button class="suggestion-chip" data-text="I'm feeling so happy today! I got great news!">😄 I'm feeling happy</button>
+        <button class="suggestion-chip" data-text="I feel lonely and disconnected from everyone around me.">💙 I feel lonely</button>
+        <button class="suggestion-chip" data-text="I'm overwhelmed with work and don't know how to cope.">😤 I'm overwhelmed</button>
+        <button class="suggestion-chip" data-text="Can you help me with a mindfulness or breathing exercise?">🧘 Help me breathe</button>
+        <button class="suggestion-chip" data-text="I need some motivation and encouragement right now.">💪 Motivate me</button>
+      </div>
+
+      <!-- Composer -->
+      <div class="composer-wrap">
+        <div class="typing-indicator hidden" id="typingIndicator">
+          <div class="ai-avatar-mini"></div>
+          <div class="typing-dots"><span></span><span></span><span></span></div>
+          <span class="typing-text">Emora is thinking...</span>
+        </div>
+
+        <div class="composer" id="composerBar">
+          <button class="composer-icon-btn" id="voiceBtn" title="Voice Input">🎤</button>
+          <div class="voice-visualizer hidden" id="voiceVisualizer">
+            <div class="voice-bar"></div><div class="voice-bar"></div><div class="voice-bar"></div>
+            <div class="voice-bar"></div><div class="voice-bar"></div>
+          </div>
+          <textarea id="chatInput" rows="1" maxlength="2000"
+            placeholder="Tell me what's on your mind... I'm here to listen 💙"
+            autocomplete="off" spellcheck="true"></textarea>
+          <div class="composer-actions">
+            <span class="char-count" id="charCount">0/2000</span>
+            <button type="button" class="send-btn" id="sendBtn">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                <path d="M22 2L11 13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M22 2L15 22L11 13L2 9L22 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+        <div class="input-meta">
+          <span class="input-meta-item">🛡️ Your messages are private & encrypted</span>
+          <span class="input-meta-item">🤖 Powered by multimodal AI emotion analysis</span>
+        </div>
+      </div>
+
+    </main>
+
+    <!-- RIGHT PANEL: Analytics -->
+    <!-- <aside class="analytics-panel" id="analyticsPanel">
+      <div class="ap-header">
+        <h3>📊 Emotion Analytics</h3>
+        <button class="ap-close" id="apClose">✕</button>
+      </div>
+
+       <div class="ap-card">
+        <h4>Mood Trend Today</h4>
+        <canvas id="moodChart" width="220" height="100"></canvas>
+      </div>
+
+      <div class="ap-card">
+        <h4>Emotional Summary</h4>
+        <div class="emotion-summary" id="emotionSummary">
+          <div class="es-row"><span>Dominant Emotion</span><strong id="dominantEmo">Calm</strong></div>
+          <div class="es-row"><span>Risk Score</span><strong class="safe" id="riskScore">0/10</strong></div>
+          <div class="es-row"><span>Engagement</span><strong id="engagementScore">High</strong></div>
+          <div class="es-row"><span>NLP Confidence</span><strong id="nlpConfidence">94%</strong></div>
+        </div>
+      </div>
+
+      <div class="ap-card">
+        <h4>AI Techniques Active</h4>
+        <div class="technique-list">
+          <div class="tech-item active"><span class="tech-dot"></span>BERT Sentiment Analysis</div>
+          <div class="tech-item active"><span class="tech-dot"></span>CNN Facial Recognition</div>
+          <div class="tech-item active"><span class="tech-dot"></span>RNN Voice Analysis</div>
+          <div class="tech-item active"><span class="tech-dot"></span>Reinforcement Learning</div>
+          <div class="tech-item active"><span class="tech-dot"></span>Crisis Detection Protocol</div>
+          <div class="tech-item" id="wearablesTechItem"><span class="tech-dot"></span>Wearables Integration</div>
+        </div>
+      </div>
+
+      <div class="ap-card">
+        <h4>Recommended Actions</h4>
+        <div class="rec-list" id="recList">
+          <div class="rec-item">💬 Keep talking — you're making progress</div>
+          <div class="rec-item">🧘 Try a 4-7-8 breathing technique</div>
+          <div class="rec-item">📓 Journal your thoughts tonight</div>
+        </div>
+      </div>  
+
+       <button class="ap-analytics-btn" id="toggleAnalytics">📊 Toggle Panel</button>
+    </aside>
+
+  </div> -->
+
+  <script src="respone.js"></script>
+  <script src="ai-engine.js"></script>
+  <script src="app.js"></script>
+  <script>
+    (function() {
+      try {
+        // ── User greeting ──────────────────────────────────────
+        const session = JSON.parse(localStorage.getItem('emora_session') || '{}');
+        const name = session.name || session.email || 'You';
+        const firstName = name.split(' ')[0].split('@')[0];
+        const initial   = firstName.charAt(0).toUpperCase();
+
+        const greetEl = document.getElementById('greetingName');
+        if (greetEl) greetEl.textContent = 'Hi, ' + firstName + ' 👋';
+
+        const iconEl = document.getElementById('avatarPillIcon');
+        if (iconEl) iconEl.textContent = initial;
+
+        const fabEl = document.getElementById('fabProfileInitial');
+        if (fabEl) fabEl.textContent = initial;
+
+        // ── Apply companion settings ───────────────────────────
+        const comp = JSON.parse(localStorage.getItem('emora_companion') || '{}');
+        if (comp.name || comp.emoji) {
+          // Sidebar AI name tag
+          const emotionBadge = document.querySelector('.avatar-emotion-badge');
+          if (emotionBadge && comp.name) emotionBadge.textContent = comp.name;
+
+          // Sidebar avatar face background
+          const avatarFace = document.querySelector('.avatar-face');
+          if (avatarFace && comp.avatarBg) avatarFace.style.background = comp.avatarBg;
+
+          // Replace avatar face eyes with emoji
+          if (comp.emoji && avatarFace) {
+            avatarFace.innerHTML = `<span style="font-size:22px;line-height:1">${comp.emoji}</span>`;
+            avatarFace.style.flexDirection = 'row';
+            avatarFace.style.alignItems = 'center';
+          }
+
+          // Header sub-text companion name
+          const headerSub = document.querySelector('.header-sub');
+          if (headerSub && comp.name) {
+            const styleLabel = comp.style ? ` · ${comp.style}` : '';
+            headerSub.textContent = `${comp.name}${styleLabel} · End-to-End Encrypted`;
+          }
+
+          // Message avatar mini (AI chat bubbles)
+          document.querySelectorAll('.message-row.ai .msg-avatar').forEach(el => {
+            if (comp.emoji) el.textContent = comp.emoji;
+            if (comp.avatarBg) el.style.background = comp.avatarBg;
+          });
+        }
+      } catch(e) {}
+    })();
+
+    async function handleLogout() {
+      if (!confirm('Sign out of Emora AI?')) return;
+      localStorage.removeItem('emora_session');
+      if (window._firebaseAuth) {
+        try { await window._firebaseAuth.signOut(); } catch(e) {}
+      }
+      window.location.href = 'auth.html';
+    }
+  </script>
+
+</body>
+</html>

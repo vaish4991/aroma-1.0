@@ -1,0 +1,10 @@
+fastapi==0.115.0
+uvicorn[standard]==0.30.6
+openai==1.52.0
+vaderSentiment==3.3.2
+textblob==0.18.0.post0
+scikit-learn==1.5.2
+# Python 3.13 needs NumPy 2.x wheels on macOS; 1.26.x may try building from source.
+numpy>=2.1.0
+python-dotenv==1.0.1
+pydantic==2.9.2

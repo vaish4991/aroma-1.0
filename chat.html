@@ -1,0 +1,1851 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Emora AI — Talk with Emora</title>
+  <meta name="description" content="Chat, video call, and voice call with your Emora AI emotional companion. Always here to listen." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Sora:wght@400;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    /* ─── TOKENS ─────────────────────────────────────── */
+    :root {
+      --bg: #1a1040;
+      --bg2: #251556;
+      --surface: rgba(255,255,255,0.06);
+      --surface2: rgba(255,255,255,0.10);
+      --border: rgba(255,255,255,0.10);
+      --border-glow: rgba(139,92,246,0.45);
+      --primary: #8b5cf6;
+      --primary-light: #a78bfa;
+      --secondary: #06b6d4;
+      --success: #10b981;
+      --danger: #ef4444;
+      --warning: #f59e0b;
+      --grad: linear-gradient(135deg,#8b5cf6,#6366f1,#06b6d4);
+      --grad-warm: linear-gradient(135deg,#f59e0b,#ef4444);
+      --text: #f1f5f9;
+      --text2: #94a3b8;
+      --text3: #475569;
+      --font: 'Inter', system-ui, sans-serif;
+      --display: 'Sora', system-ui, sans-serif;
+      --r-sm: 10px; --r-md: 16px; --r-lg: 22px; --r-xl: 30px; --r-full: 9999px;
+      --trans: all 0.25s cubic-bezier(0.4,0,0.2,1);
+    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    html{scroll-behavior:smooth}
+    body{
+      font-family:var(--font);
+      background: linear-gradient(160deg,#0d0820 0%,#1a1040 40%,#251060 100%);
+      color:var(--text);
+      height:100vh; overflow:hidden;
+      -webkit-font-smoothing:antialiased;
+    }
+    button{cursor:pointer;border:none;background:none;font-family:inherit}
+    a{text-decoration:none;color:inherit}
+    textarea,input{font-family:inherit}
+
+    /* ─── AMBIENT BG ─────────────────────────────────── */
+    .ambient{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:0}
+    .ambient::before{
+      content:'';position:absolute;
+      width:700px;height:700px;
+      background:radial-gradient(circle,rgba(99,102,241,0.18) 0%,transparent 70%);
+      top:-200px;left:-100px;
+      animation:orbFloat1 14s ease-in-out infinite;
+    }
+    .ambient::after{
+      content:'';position:absolute;
+      width:500px;height:500px;
+      background:radial-gradient(circle,rgba(6,182,212,0.12) 0%,transparent 70%);
+      bottom:-100px;right:100px;
+      animation:orbFloat2 18s ease-in-out infinite;
+    }
+    @keyframes orbFloat1{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(80px,60px) scale(1.1)}}
+    @keyframes orbFloat2{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(-60px,-40px) scale(0.9)}}
+
+    /* ─── LAYOUT ─────────────────────────────────────── */
+    .app{
+      position:relative;z-index:1;
+      display:grid;
+      grid-template-columns:52px 1fr;
+      grid-template-rows:100vh;
+      height:100vh;
+    }
+
+    /* ─── LEFT NAV ───────────────────────────────────── */
+    .left-nav{
+      background:rgba(13,8,32,0.95);
+      border-right:1px solid var(--border);
+      display:flex;flex-direction:column;align-items:center;
+      gap:6px;padding:16px 8px;
+    }
+    .nav-logo{
+      width:36px;height:36px;border-radius:10px;
+      background:var(--grad);
+      display:flex;align-items:center;justify-content:center;
+      font-family:var(--display);font-weight:800;font-size:18px;color:white;
+      box-shadow:0 0 20px rgba(139,92,246,0.5);
+      margin-bottom:8px;flex-shrink:0;
+    }
+    .nav-divider{width:28px;height:1px;background:var(--border);margin:4px 0;}
+    .nav-icon-btn{
+      width:36px;height:36px;border-radius:10px;
+      display:flex;align-items:center;justify-content:center;
+      font-size:17px;color:var(--text2);
+      transition:var(--trans);position:relative;
+    }
+    .nav-icon-btn:hover,.nav-icon-btn.active{
+      background:rgba(139,92,246,0.18);
+      color:var(--primary-light);
+    }
+    .nav-icon-btn.active::after{
+      content:'';position:absolute;right:-8px;top:50%;transform:translateY(-50%);
+      width:3px;height:20px;background:var(--primary);border-radius:3px 0 0 3px;
+    }
+    .nav-spacer{flex:1}
+    .nav-user-av{
+      width:34px;height:34px;border-radius:50%;
+      background:var(--grad);
+      display:flex;align-items:center;justify-content:center;
+      font-size:13px;font-weight:800;color:white;
+      border:2px solid rgba(139,92,246,0.4);
+      cursor:pointer;transition:var(--trans);
+    }
+    .nav-user-av:hover{box-shadow:0 0 16px rgba(139,92,246,0.5);}
+
+    /* ─── MAIN AREA ──────────────────────────────────── */
+    .main-area{
+      display:grid;
+      grid-template-columns:1fr 360px;
+      height:100vh;
+      overflow:hidden;
+    }
+
+    /* ─── AVATAR PANEL (left side like Replika) ──────── */
+    .avatar-panel{
+      position:relative;
+      background:linear-gradient(180deg,rgba(20,10,50,0.9) 0%,rgba(10,5,30,0.95) 100%);
+      display:flex;flex-direction:column;align-items:center;justify-content:center;
+      overflow:hidden;gap:0;
+    }
+    /* Top nav bar */
+    .chat-nav{
+      position:absolute;top:0;left:0;right:0;
+      display:flex;align-items:center;justify-content:space-between;
+      padding:14px 20px;
+      background:rgba(13,8,32,0.6);
+      backdrop-filter:blur(20px);
+      border-bottom:1px solid var(--border);
+      z-index:10;
+    }
+    .chat-nav-left{display:flex;align-items:center;gap:10px;}
+    .back-btn{
+      width:32px;height:32px;border-radius:8px;
+      background:var(--surface);border:1px solid var(--border);
+      display:flex;align-items:center;justify-content:center;
+      color:var(--text2);font-size:16px;transition:var(--trans);
+    }
+    .back-btn:hover{background:var(--primary);color:white;border-color:transparent;}
+    .ai-identity{display:flex;align-items:center;gap:10px;}
+    .ai-identity-av{
+      width:34px;height:34px;border-radius:50%;
+      background:var(--grad);
+      display:flex;align-items:center;justify-content:center;
+      font-size:15px;box-shadow:0 0 14px rgba(139,92,246,0.5);
+    }
+    .ai-name-wrap{}
+    .ai-name-text{font-family:var(--display);font-weight:700;font-size:14px;display:block;}
+    .ai-status{font-size:10px;color:var(--success);display:flex;align-items:center;gap:4px;}
+    .ai-status::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--success);box-shadow:0 0 6px var(--success);}
+    .chat-nav-tabs{display:flex;gap:4px;}
+    .nav-tab{
+      padding:6px 12px;border-radius:var(--r-full);
+      font-size:12px;font-weight:600;color:var(--text2);
+      cursor:pointer;transition:var(--trans);
+    }
+    .nav-tab:hover{color:var(--text);background:var(--surface);}
+    .nav-tab.active{background:rgba(139,92,246,0.2);color:var(--primary-light);}
+    .chat-nav-right{display:flex;align-items:center;gap:8px;}
+    .nav-action-btn{
+      width:34px;height:34px;border-radius:25px;
+      display:flex;align-items:center;justify-content:center;
+      font-size:15px;background:var(--surface);border:1px solid var(--border);
+      color:var(--text2);cursor:pointer;transition:var(--trans);
+    }
+    .nav-action-btn:hover{background:var(--primary);color:white;border-color:transparent;}
+    .nav-action-btn.voice-call-btn:hover{background:var(--success);}
+    .nav-action-btn.video-call-btn:hover{background:var(--secondary);}
+    .btn-tooltip{position:relative;}
+    .btn-tooltip::after{
+      content:attr(data-tip);
+      position:absolute;bottom:-30px;left:50%;transform:translateX(-50%);
+      background:rgba(0,0,0,0.8);color:white;font-size:10px;
+      padding:3px 8px;border-radius:6px;white-space:nowrap;
+      opacity:0;transition:opacity 0.2s;pointer-events:none;
+    }
+    .btn-tooltip:hover::after{opacity:1;}
+
+    /* ─── BIG AVATAR ─────────────────────────────────── */
+    .big-avatar-wrap{
+      position:absolute;
+      top:50%;left:50%;transform:translate(-50%,-52%);
+      display:flex;flex-direction:column;align-items:center;
+      z-index:2;
+    }
+    .big-avatar-stage{
+      position:relative;
+      width:220px;height:220px;
+      display:flex;align-items:center;justify-content:center;
+    }
+    .av-ring{
+      position:absolute;border-radius:50%;border:1px solid rgba(139,92,246,0.25);
+      animation:ringRotate linear infinite;
+    }
+    .av-ring-1{inset:0;animation-duration:10s;}
+    .av-ring-2{inset:16px;opacity:0.6;animation-duration:14s;animation-direction:reverse;}
+    .av-ring-3{inset:32px;opacity:0.3;animation-duration:8s;}
+    @keyframes ringRotate{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+    .av-glow-orb{
+      position:absolute;inset:0;border-radius:50%;
+      background:radial-gradient(circle,rgba(139,92,246,0.25) 0%,transparent 70%);
+      animation:glowPulse 3s ease-in-out infinite;
+    }
+    @keyframes glowPulse{0%,100%{opacity:0.6;transform:scale(1)}50%{opacity:1;transform:scale(1.15)}}
+    .av-body{
+      position:relative;z-index:3;
+      width:130px;height:130px;border-radius:50%;
+      background:linear-gradient(135deg,#6d28d9,#8b5cf6,#06b6d4);
+      display:flex;align-items:center;justify-content:center;
+      flex-direction:column;gap:8px;
+      box-shadow:
+        0 0 60px rgba(139,92,246,0.4),
+        0 0 120px rgba(139,92,246,0.15),
+        inset 0 2px 0 rgba(255,255,255,0.2);
+      animation:avatarBreath 4s ease-in-out infinite;
+    }
+    @keyframes avatarBreath{
+      0%,100%{box-shadow:0 0 60px rgba(139,92,246,0.4),0 0 120px rgba(139,92,246,0.15),inset 0 2px 0 rgba(255,255,255,0.2)}
+      50%{box-shadow:0 0 90px rgba(139,92,246,0.6),0 0 160px rgba(139,92,246,0.25),inset 0 2px 0 rgba(255,255,255,0.2)}
+    }
+    .av-face-eyes{display:flex;gap:18px;align-items:center;}
+    .av-eye-dot{
+      width:10px;height:10px;background:white;border-radius:50%;
+      box-shadow:0 0 8px rgba(255,255,255,0.8);
+      animation:eyeBlink 5s ease-in-out infinite;
+    }
+    @keyframes eyeBlink{0%,85%,100%{transform:scaleY(1)}90%{transform:scaleY(0.1)}}
+    .av-smile{
+      width:28px;height:12px;
+      border:2.5px solid rgba(255,255,255,0.85);border-top:none;
+      border-radius:0 0 28px 28px;
+      box-shadow:0 3px 10px rgba(255,255,255,0.2);
+    }
+    .av-emotion-tag{
+      margin-top:14px;
+      background:rgba(139,92,246,0.25);
+      border:1px solid rgba(139,92,246,0.4);
+      backdrop-filter:blur(10px);
+      padding:5px 16px;border-radius:var(--r-full);
+      font-size:12px;font-weight:600;color:#c4b5fd;
+      animation:tagFloat 3s ease-in-out infinite;
+    }
+    @keyframes tagFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+    .av-status-row{
+      margin-top:6px;display:flex;align-items:center;gap:6px;
+      font-size:11px;color:var(--text2);
+    }
+    .av-status-dot{
+      width:7px;height:7px;border-radius:50%;background:var(--success);
+      box-shadow:0 0 8px var(--success);
+      animation:pulse 2s infinite;
+    }
+    @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+
+    /* ─── CALL ACTION BUTTONS (floating bottom of avatar panel) */
+    .call-actions{
+      position:absolute;bottom:70px;left:50%;transform:translateX(-50%);
+      display:flex;gap:14px;z-index:5;
+    }
+    .call-pill{
+      display:flex;align-items:center;gap:8px;
+      padding:10px 20px;border-radius:var(--r-full);
+      font-size:13px;font-weight:600;
+      border:none;cursor:pointer;transition:var(--trans);
+      font-family:var(--font);
+    }
+    .call-pill.voice{
+      background:rgba(16,185,129,0.15);
+      border:1px solid rgba(16,185,129,0.35);
+      color:#34d399;
+    }
+    .call-pill.voice:hover{
+      background:var(--success);color:white;
+      box-shadow:0 8px 30px rgba(16,185,129,0.4);
+      transform:translateY(-3px);
+    }
+    .call-pill.video{
+      background:rgba(6,182,212,0.15);
+      border:1px solid rgba(6,182,212,0.35);
+      color:#22d3ee;
+    }
+    .call-pill.video:hover{
+      background:var(--secondary);color:white;
+      box-shadow:0 8px 30px rgba(6,182,212,0.4);
+      transform:translateY(-3px);
+    }
+
+    /* Alert / notice bar */
+    .notice-bar{
+      position:absolute;bottom:0;left:0;right:0;
+      padding:8px 20px;text-align:center;
+      font-size:10px;color:var(--text3);
+      background:rgba(13,8,32,0.6);backdrop-filter:blur(10px);
+      border-top:1px solid var(--border);
+    }
+
+    /* ─── CHAT PANEL ─────────────────────────────────── */
+    .chat-panel{
+      display:flex;flex-direction:column;
+      background:rgba(13,8,32,0.92);
+      border-left:1px solid var(--border);
+      height:100vh;overflow:hidden;
+    }
+
+    /* Chat header */
+    .chat-panel-header{
+      padding:16px 18px;border-bottom:1px solid var(--border);
+      font-size:12px;font-weight:600;color:var(--text2);
+      text-transform:uppercase;letter-spacing:0.06em;
+      display:flex;align-items:center;justify-content:space-between;
+      flex-shrink:0;
+    }
+    .chat-panel-header span{display:flex;align-items:center;gap:6px;}
+    .chat-count{
+      background:rgba(139,92,246,0.2);color:var(--primary-light);
+      font-size:10px;padding:2px 8px;border-radius:var(--r-full);
+    }
+
+    /* Messages */
+    .chat-messages{
+      flex:1;overflow-y:auto;
+      padding:20px 16px;
+      display:flex;flex-direction:column;gap:14px;
+      scrollbar-width:thin;scrollbar-color:rgba(139,92,246,0.3) transparent;
+    }
+    .chat-messages::-webkit-scrollbar{width:3px;}
+    .chat-messages::-webkit-scrollbar-thumb{background:rgba(139,92,246,0.3);border-radius:3px;}
+
+    .msg-row{display:flex;gap:10px;animation:msgSlide 0.3s cubic-bezier(0.34,1.56,0.64,1);}
+    @keyframes msgSlide{from{opacity:0;transform:translateY(14px) scale(0.97)}to{opacity:1;transform:none}}
+    .msg-row.user{flex-direction:row-reverse;}
+    .msg-av{
+      width:32px;height:32px;border-radius:50%;flex-shrink:0;
+      display:flex;align-items:center;justify-content:center;
+      font-size:13px;margin-top:2px;
+    }
+    .msg-row.ai .msg-av{background:var(--grad);box-shadow:0 0 12px rgba(139,92,246,0.4);}
+    .msg-row.user .msg-av{background:var(--surface2);border:1px solid var(--border);}
+    .msg-content-wrap{display:flex;flex-direction:column;gap:3px;max-width:80%;}
+    .bubble{
+      padding:11px 15px;border-radius:var(--r-lg);
+      line-height:1.6;font-size:13.5px;
+    }
+    .msg-row.ai .bubble{
+      background:rgba(255,255,255,0.07);
+      border:1px solid var(--border);
+      border-top-left-radius:4px;
+      color:var(--text);
+    }
+    .msg-row.user .bubble{
+      background:linear-gradient(135deg,#6d28d9,#8b5cf6);
+      border-top-right-radius:4px;
+      color:white;
+      box-shadow:0 4px 20px rgba(139,92,246,0.3);
+    }
+    .msg-meta{font-size:10px;color:var(--text3);display:flex;gap:8px;align-items:center;}
+    .msg-row.user .msg-meta{justify-content:flex-end;}
+    .msg-tag{
+      font-size:9px;padding:1px 7px;border-radius:var(--r-full);
+      background:rgba(6,182,212,0.12);color:var(--secondary);
+      border:1px solid rgba(6,182,212,0.2);
+    }
+
+    /* Reactions row */
+    .msg-reactions{display:flex;gap:4px;margin-top:2px;}
+    .reaction-btn{
+      font-size:14px;padding:3px 7px;border-radius:8px;
+      background:var(--surface);border:1px solid var(--border);
+      cursor:pointer;transition:var(--trans);
+    }
+    .reaction-btn:hover{background:rgba(139,92,246,0.2);border-color:rgba(139,92,246,0.4);}
+    .reaction-btn.more{font-size:11px;color:var(--text2);}
+
+    /* Typing indicator */
+    .typing-row{display:flex;gap:10px;align-items:center;}
+    .typing-row.hidden{display:none;}
+    .typing-av{width:32px;height:32px;border-radius:50%;background:var(--grad);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:12px;}
+    .typing-dots{display:flex;gap:4px;align-items:center;padding:12px 14px;background:rgba(255,255,255,0.06);border:1px solid var(--border);border-radius:16px;border-top-left-radius:4px;}
+    .typing-dots span{width:7px;height:7px;border-radius:50%;background:var(--primary);animation:typeBounce 1.2s ease-in-out infinite;}
+    .typing-dots span:nth-child(2){animation-delay:0.2s;}
+    .typing-dots span:nth-child(3){animation-delay:0.4s;}
+    @keyframes typeBounce{0%,80%,100%{transform:scale(0.6);opacity:0.4}40%{transform:scale(1.1);opacity:1}}
+
+    /* Suggestions */
+    .suggestions-bar{
+      padding:10px 14px;border-top:1px solid var(--border);
+      display:flex;gap:6px;flex-wrap:wrap;flex-shrink:0;
+    }
+    .sug-chip{
+      padding:5px 12px;border-radius:var(--r-full);
+      background:var(--surface);border:1px solid var(--border);
+      color:var(--text2);font-size:11px;font-weight:500;
+      cursor:pointer;transition:var(--trans);white-space:nowrap;
+    }
+    .sug-chip:hover{background:rgba(139,92,246,0.15);border-color:rgba(139,92,246,0.4);color:var(--primary-light);transform:translateY(-2px);}
+
+    /* Composer */
+    .composer-area{
+      padding:12px 14px 14px;border-top:1px solid var(--border);
+      background:rgba(8,5,22,0.96);flex-shrink:0;
+    }
+    .composer-box{
+      display:flex;align-items:flex-end;gap:8px;
+      background:var(--surface);border:1px solid var(--border);
+      border-radius:20px;padding:10px 12px;
+      transition:var(--trans);
+    }
+    .composer-box:focus-within{border-color:rgba(139,92,246,0.5);box-shadow:0 0 0 3px rgba(139,92,246,0.08);}
+    .comp-icon-btn{
+      width:32px;height:32px;border-radius:50%;
+      display:flex;align-items:center;justify-content:center;
+      font-size:15px;color:var(--text2);
+      background:var(--surface2);border:1px solid var(--border);
+      transition:var(--trans);flex-shrink:0;
+    }
+    .comp-icon-btn:hover{background:var(--primary);color:white;border-color:transparent;}
+    .comp-icon-btn.red:hover{background:var(--danger);}
+    #msgInput{
+      flex:1;background:none;border:none;outline:none;
+      color:var(--text);font-size:13.5px;line-height:1.5;
+      resize:none;min-height:22px;max-height:120px;overflow-y:auto;
+      padding:4px 0;
+    }
+    #msgInput::placeholder{color:var(--text3);}
+    .send-btn{
+      width:34px;height:34px;border-radius:50%;flex-shrink:0;
+      background:linear-gradient(135deg,#8b5cf6,#06b6d4);
+      display:flex;align-items:center;justify-content:center;
+      box-shadow:0 4px 15px rgba(139,92,246,0.4);
+      transition:var(--trans);
+    }
+    .send-btn:hover{transform:scale(1.1);box-shadow:0 6px 24px rgba(139,92,246,0.5);}
+    .send-btn:active{transform:scale(0.94);}
+    .composer-meta{
+      display:flex;justify-content:center;gap:16px;
+      margin-top:6px;font-size:10px;color:var(--text3);
+    }
+
+    /* ── VOICE CALL MODAL ──────────────────────────── */
+    .modal-overlay{
+      position:fixed;inset:0;z-index:500;
+      background:rgba(0,0,0,0.88);backdrop-filter:blur(24px);
+      display:flex;align-items:center;justify-content:center;
+      opacity:0;pointer-events:none;
+      transition:opacity 0.3s ease;
+    }
+    .modal-overlay.open{opacity:1;pointer-events:all;}
+
+    /* Voice Call */
+    .voice-modal{
+      background:linear-gradient(160deg,#0d0820,#1a1040,#251556);
+      border:1px solid rgba(16,185,129,0.25);
+      border-radius:var(--r-xl);
+      padding:40px 36px;
+      width:380px;max-width:95vw;
+      text-align:center;
+      box-shadow:0 0 80px rgba(16,185,129,0.12),0 40px 80px rgba(0,0,0,0.6);
+      transform:scale(0.85);transition:transform 0.35s cubic-bezier(0.34,1.56,0.64,1);
+      position:relative;
+    }
+    .modal-overlay.open .voice-modal,.modal-overlay.open .video-modal{transform:scale(1);}
+    .vcall-avatar{
+      width:100px;height:100px;border-radius:50%;
+      background:var(--grad);margin:0 auto 16px;
+      display:flex;align-items:center;justify-content:center;
+      font-size:36px;
+      box-shadow:0 0 60px rgba(16,185,129,0.4),0 0 120px rgba(139,92,246,0.2);
+      animation:callAvatarBreath 2s ease-in-out infinite;
+      position:relative;
+    }
+    @keyframes callAvatarBreath{
+      0%,100%{box-shadow:0 0 60px rgba(16,185,129,0.4),0 0 120px rgba(139,92,246,0.2)}
+      50%{box-shadow:0 0 90px rgba(16,185,129,0.6),0 0 160px rgba(139,92,246,0.35)}
+    }
+    .vcall-ripple{
+      position:absolute;inset:-10px;border-radius:50%;
+      border:2px solid rgba(16,185,129,0.3);
+      animation:rippleOut 2s ease-out infinite;
+    }
+    .vcall-ripple:nth-child(2){inset:-22px;animation-delay:0.4s;border-color:rgba(16,185,129,0.2);}
+    .vcall-ripple:nth-child(3){inset:-36px;animation-delay:0.8s;border-color:rgba(16,185,129,0.1);}
+    @keyframes rippleOut{
+      0%{opacity:1;transform:scale(0.95)}
+      100%{opacity:0;transform:scale(1.4)}
+    }
+    .vcall-name{font-family:var(--display);font-size:22px;font-weight:700;margin-bottom:4px;}
+    .vcall-status{font-size:12px;color:var(--success);margin-bottom:8px;display:flex;align-items:center;justify-content:center;gap:6px;}
+    .vcall-status::before{content:'';width:7px;height:7px;border-radius:50%;background:var(--success);box-shadow:0 0 8px var(--success);animation:pulse 1.5s infinite;}
+    .vcall-timer{font-size:28px;font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:0.04em;color:var(--success);margin:10px 0 6px;}
+
+    /* Waveform */
+    .waveform{
+      display:flex;align-items:center;justify-content:center;
+      gap:4px;margin:14px 0;height:50px;
+    }
+    .wave-bar{
+      width:4px;background:linear-gradient(180deg,var(--success),rgba(16,185,129,0.3));
+      border-radius:4px;
+      animation:waveAnim 0.8s ease-in-out infinite;
+    }
+    .wave-bar:nth-child(1){height:12px;animation-delay:0s}
+    .wave-bar:nth-child(2){height:28px;animation-delay:0.1s}
+    .wave-bar:nth-child(3){height:44px;animation-delay:0.2s}
+    .wave-bar:nth-child(4){height:36px;animation-delay:0.15s}
+    .wave-bar:nth-child(5){height:50px;animation-delay:0.05s}
+    .wave-bar:nth-child(6){height:38px;animation-delay:0.25s}
+    .wave-bar:nth-child(7){height:44px;animation-delay:0.3s}
+    .wave-bar:nth-child(8){height:28px;animation-delay:0.1s}
+    .wave-bar:nth-child(9){height:16px;animation-delay:0.35s}
+    .wave-bar:nth-child(10){height:8px;animation-delay:0s}
+    @keyframes waveAnim{0%,100%{transform:scaleY(0.3)}50%{transform:scaleY(1)}}
+    .wave-bar.paused{animation-play-state:paused;transform:scaleY(0.3);}
+
+    /* Voice call controls */
+    .call-controls{display:flex;justify-content:center;gap:16px;margin-top:20px;}
+    .ctrl-btn{
+      width:52px;height:52px;border-radius:50%;
+      display:flex;align-items:center;justify-content:center;font-size:20px;
+      transition:var(--trans);cursor:pointer;border:none;
+    }
+    .ctrl-btn.mute{background:rgba(255,255,255,0.1);color:var(--text2);}
+    .ctrl-btn.mute:hover{background:rgba(255,255,255,0.2);color:var(--text);}
+    .ctrl-btn.mute.active{background:rgba(239,68,68,0.2);color:var(--danger);}
+    .ctrl-btn.speaker{background:rgba(255,255,255,0.1);color:var(--text2);}
+    .ctrl-btn.speaker:hover{background:rgba(255,255,255,0.2);color:var(--text);}
+    .ctrl-btn.hangup{
+      background:var(--danger);color:white;
+      box-shadow:0 6px 24px rgba(239,68,68,0.4);
+      width:60px;height:60px;font-size:22px;
+    }
+    .ctrl-btn.hangup:hover{transform:scale(1.1);box-shadow:0 10px 36px rgba(239,68,68,0.55);}
+    .ctrl-btn.expand{background:rgba(6,182,212,0.15);color:var(--secondary);}
+    .ctrl-btn.expand:hover{background:var(--secondary);color:white;}
+    .ctrl-label{font-size:9px;color:var(--text3);margin-top:4px;text-align:center;}
+    .ctrl-wrap{display:flex;flex-direction:column;align-items:center;}
+    .vcall-note{font-size:10px;color:var(--text3);margin-top:16px;}
+
+    /* ── VIDEO CALL MODAL ──────────────────────────── */
+    .video-modal{
+      background:rgba(10,6,28,0.98);
+      border:1px solid rgba(6,182,212,0.2);
+      border-radius:var(--r-xl);
+      width:800px;max-width:97vw;max-height:96vh;
+      overflow:hidden;
+      box-shadow:0 0 100px rgba(6,182,212,0.1),0 60px 100px rgba(0,0,0,0.7);
+      transform:scale(0.85);
+      position:relative;
+      display:flex;flex-direction:column;
+    }
+    /* Video area */
+    .video-main{
+      position:relative;flex:1;
+      background:linear-gradient(160deg,#0d0820,#1a1040);
+      min-height:380px;
+      display:flex;align-items:center;justify-content:center;
+      overflow:hidden;
+    }
+    /* AI video side */
+    .ai-video-side{
+      width:100%;height:100%;
+      display:flex;align-items:center;justify-content:center;
+      flex-direction:column;gap:12px;
+    }
+    .ai-video-avatar{
+      width:160px;height:160px;border-radius:50%;
+      background:var(--grad);
+      display:flex;align-items:center;justify-content:center;font-size:64px;
+      box-shadow:0 0 80px rgba(139,92,246,0.5),0 0 160px rgba(139,92,246,0.2);
+      animation:videoAvatarBreath 3s ease-in-out infinite;
+      position:relative;
+    }
+    @keyframes videoAvatarBreath{
+      0%,100%{box-shadow:0 0 80px rgba(139,92,246,0.5),0 0 160px rgba(139,92,246,0.2)}
+      50%{box-shadow:0 0 120px rgba(139,92,246,0.7),0 0 200px rgba(139,92,246,0.35)}
+    }
+    .ai-speaking-wave{
+      display:flex;gap:4px;align-items:center;height:24px;margin-top:8px;
+    }
+    .ai-wave-bar{
+      width:4px;border-radius:4px;
+      background:linear-gradient(180deg,var(--primary),rgba(139,92,246,0.3));
+      animation:waveAnim 0.9s ease-in-out infinite;
+    }
+    .ai-wave-bar:nth-child(1){height:8px;animation-delay:0s}
+    .ai-wave-bar:nth-child(2){height:16px;animation-delay:0.1s}
+    .ai-wave-bar:nth-child(3){height:22px;animation-delay:0.2s}
+    .ai-wave-bar:nth-child(4){height:16px;animation-delay:0.15s}
+    .ai-wave-bar:nth-child(5){height:8px;animation-delay:0.3s}
+
+    /* User camera pip */
+    .user-pip{
+      position:absolute;bottom:16px;right:16px;
+      width:160px;height:110px;
+      border-radius:var(--r-md);
+      border:2px solid rgba(255,255,255,0.15);
+      overflow:hidden;
+      box-shadow:0 8px 30px rgba(0,0,0,0.6);
+      background:#000;
+      cursor:pointer;transition:var(--trans);
+    }
+    .user-pip:hover{transform:scale(1.04);}
+    #localVideo{width:100%;height:100%;object-fit:cover;transform:scaleX(-1);}
+    .pip-placeholder{
+      width:100%;height:100%;
+      display:flex;flex-direction:column;
+      align-items:center;justify-content:center;gap:6px;
+      background:linear-gradient(135deg,#1a1040,#251556);
+      font-size:10px;color:var(--text2);
+    }
+    .pip-placeholder .pip-icon{font-size:24px;}
+
+    /* Video top bar */
+    .video-topbar{
+      position:absolute;top:0;left:0;right:0;
+      padding:14px 18px;
+      display:flex;align-items:center;justify-content:space-between;
+      background:linear-gradient(180deg,rgba(10,6,28,0.8) 0%,transparent 100%);
+      z-index:5;
+    }
+    .video-caller-info{display:flex;align-items:center;gap:10px;}
+    .video-caller-av{width:32px;height:32px;border-radius:50%;background:var(--grad);display:flex;align-items:center;justify-content:center;font-size:14px;}
+    .video-caller-name{font-family:var(--display);font-weight:700;font-size:14px;}
+    .video-caller-sub{font-size:10px;color:var(--secondary);}
+    .video-timer{
+      font-size:22px;font-weight:700;font-variant-numeric:tabular-nums;
+      color:white;text-shadow:0 0 20px rgba(255,255,255,0.3);
+    }
+    .video-rec-badge{
+      display:flex;align-items:center;gap:6px;
+      background:rgba(239,68,68,0.2);border:1px solid rgba(239,68,68,0.4);
+      padding:4px 10px;border-radius:var(--r-full);font-size:11px;color:#fca5a5;
+    }
+    .rec-dot{width:7px;height:7px;border-radius:50%;background:var(--danger);animation:pulse 1s infinite;flex-shrink:0;}
+
+    /* Video bottom controls */
+    .video-controls{
+      padding:18px 24px;
+      background:rgba(8,4,20,0.96);border-top:1px solid var(--border);
+      display:flex;align-items:center;justify-content:center;gap:14px;
+    }
+    .vid-ctrl-btn{
+      width:50px;height:50px;border-radius:50%;
+      display:flex;align-items:center;justify-content:center;
+      font-size:19px;cursor:pointer;transition:var(--trans);
+      border:none;font-family:var(--font);
+    }
+    .vid-ctrl-btn.tog{background:rgba(255,255,255,0.1);color:var(--text2);}
+    .vid-ctrl-btn.tog:hover{background:rgba(255,255,255,0.2);color:var(--text);}
+    .vid-ctrl-btn.tog.off{background:rgba(239,68,68,0.15);color:#fca5a5;}
+    .vid-ctrl-btn.tog.off:hover{background:rgba(239,68,68,0.3);}
+    .vid-ctrl-btn.end-call{
+      background:var(--danger);color:white;
+      width:58px;height:58px;font-size:22px;
+      box-shadow:0 6px 24px rgba(239,68,68,0.4);
+    }
+    .vid-ctrl-btn.end-call:hover{transform:scale(1.1);box-shadow:0 10px 36px rgba(239,68,68,0.6);}
+    .vid-ctrl-btn.chat-snap{
+      background:rgba(139,92,246,0.15);color:var(--primary-light);
+    }
+    .vid-ctrl-btn.chat-snap:hover{background:rgba(139,92,246,0.3);}
+    .vid-ctrl-label{font-size:9px;color:var(--text3);text-align:center;margin-top:4px;}
+
+    /* Connecting overlay */
+    .connecting-overlay{
+      position:absolute;inset:0;
+      background:rgba(10,6,28,0.9);
+      display:flex;flex-direction:column;align-items:center;justify-content:center;
+      gap:14px;z-index:10;
+      transition:opacity 0.4s ease;
+    }
+    .connecting-overlay.gone{opacity:0;pointer-events:none;}
+    .connecting-spinner{
+      width:60px;height:60px;border-radius:50%;
+      border:3px solid rgba(6,182,212,0.15);
+      border-top-color:var(--secondary);
+      animation:spin 0.9s linear infinite;
+    }
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .connecting-text{font-size:14px;color:var(--text2);}
+    .connecting-sub{font-size:11px;color:var(--text3);}
+
+    /* Profile avatar pill button in video */
+    .modal-close-btn{
+      width:32px;height:32px;border-radius:50%;
+      background:rgba(255,255,255,0.1);
+      display:flex;align-items:center;justify-content:center;
+      font-size:15px;color:var(--text2);cursor:pointer;
+      transition:var(--trans);border:none;
+    }
+    .modal-close-btn:hover{background:var(--danger);color:white;}
+
+    /* ─── RESPONSIVE ─────────────────────────────────── */
+    @media(max-width:900px){
+      .main-area{grid-template-columns:1fr;}
+      .chat-panel{display:none;}
+      .call-actions{bottom:100px;}
+    }
+    @media(max-width:600px){
+      .chat-nav-tabs{display:none;}
+      .big-avatar-stage{width:160px;height:160px;}
+      .av-body{width:95px;height:95px;}
+    }
+
+    /* ─── UTILITY ─────────────────────────────────────── */
+    .hidden{display:none!important;}
+    .gradient-text{
+      background:var(--grad);
+      -webkit-background-clip:text;
+      -webkit-text-fill-color:transparent;
+      background-clip:text;
+    }
+  </style>
+</head>
+<body>
+
+<!-- Ambient background -->
+<div class="ambient"></div>
+
+<!-- ═══════════════════════ VOICE CALL MODAL ═══════════════════════ -->
+<div class="modal-overlay" id="voiceCallOverlay">
+  <div class="voice-modal">
+    <div class="vcall-avatar" id="vcallAvatar">
+      <div class="vcall-ripple"></div>
+      <div class="vcall-ripple"></div>
+      <div class="vcall-ripple"></div>
+      🤖
+    </div>
+    <h2 class="vcall-name">Emora</h2>
+    <div class="vcall-status" id="vcallStatus">Connecting...</div>
+    <div class="vcall-timer" id="vcallTimer">00:00</div>
+
+    <!-- Waveform visualization -->
+    <div class="waveform" id="voiceWaveform">
+      <div class="wave-bar"></div><div class="wave-bar"></div>
+      <div class="wave-bar"></div><div class="wave-bar"></div>
+      <div class="wave-bar"></div><div class="wave-bar"></div>
+      <div class="wave-bar"></div><div class="wave-bar"></div>
+      <div class="wave-bar"></div><div class="wave-bar"></div>
+    </div>
+
+    <!-- Controls -->
+    <div class="call-controls">
+      <div class="ctrl-wrap">
+        <button class="ctrl-btn mute" id="muteBtn" title="Mute" onclick="toggleMute()">🎤</button>
+        <div class="ctrl-label">Mute</div>
+      </div>
+      <div class="ctrl-wrap">
+        <button class="ctrl-btn hangup" id="hangupVoiceBtn" onclick="endVoiceCall()">📵</button>
+        <div class="ctrl-label">End Call</div>
+      </div>
+      <div class="ctrl-wrap">
+        <button class="ctrl-btn speaker" id="speakerBtn" title="Speaker" onclick="toggleSpeaker()">🔊</button>
+        <div class="ctrl-label">Speaker</div>
+      </div>
+    </div>
+    <div class="vcall-note">🔒 Voice encrypted end-to-end · Emora AI</div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ VIDEO CALL MODAL ═══════════════════════ -->
+<div class="modal-overlay" id="videoCallOverlay">
+  <div class="video-modal">
+    <!-- Top bar -->
+    <div class="video-topbar">
+      <div class="video-caller-info">
+        <div class="video-caller-av">🤖</div>
+        <div>
+          <div class="video-caller-name">Emora</div>
+          <div class="video-caller-sub" id="videoCallSub">Connecting...</div>
+        </div>
+      </div>
+      <div class="video-timer" id="videoTimer">00:00</div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <div class="video-rec-badge" id="recBadge" style="display:none;">
+          <div class="rec-dot"></div> Recording
+        </div>
+        <button class="modal-close-btn" onclick="endVideoCall()" title="End call">✕</button>
+      </div>
+    </div>
+
+    <!-- Main video area -->
+    <div class="video-main">
+      <!-- Connecting overlay -->
+      <div class="connecting-overlay" id="videoConnecting">
+        <div class="connecting-spinner"></div>
+        <div class="connecting-text">Connecting to Emora...</div>
+        <div class="connecting-sub">Setting up secure video channel</div>
+      </div>
+
+      <!-- AI avatar (remote side) -->
+      <div class="ai-video-side" id="aiVideoSide">
+        <div class="ai-video-avatar" id="aiVideoAv">🤖</div>
+        <div class="ai-speaking-wave" id="aiSpeakWave">
+          <div class="ai-wave-bar"></div><div class="ai-wave-bar"></div>
+          <div class="ai-wave-bar"></div><div class="ai-wave-bar"></div>
+          <div class="ai-wave-bar"></div>
+        </div>
+        <div style="font-size:12px;color:var(--text2);margin-top:4px;" id="aiSpeakLabel">Emora is listening...</div>
+      </div>
+
+      <!-- User self-view (PiP) -->
+      <div class="user-pip" id="userPip">
+        <video id="localVideo" autoplay muted playsinline></video>
+        <div class="pip-placeholder" id="pipPlaceholder">
+          <div class="pip-icon">📷</div>
+          <span>Your Camera</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom controls -->
+    <div class="video-controls">
+      <div class="ctrl-wrap">
+        <button class="vid-ctrl-btn tog" id="vidMuteBtn" onclick="toggleVideoMute()" title="Mute mic">🎤</button>
+        <div class="vid-ctrl-label">Mic</div>
+      </div>
+      <div class="ctrl-wrap">
+        <button class="vid-ctrl-btn tog" id="vidCamBtn" onclick="toggleCamera()" title="Camera off">📹</button>
+        <div class="vid-ctrl-label">Camera</div>
+      </div>
+      <div class="ctrl-wrap">
+        <button class="vid-ctrl-btn end-call" onclick="endVideoCall()" title="End call">📵</button>
+        <div class="vid-ctrl-label">End</div>
+      </div>
+      <div class="ctrl-wrap">
+        <button class="vid-ctrl-btn chat-snap" onclick="addVideoMsgToChatLog()" title="Chat">💬</button>
+        <div class="vid-ctrl-label">Chat</div>
+      </div>
+      <div class="ctrl-wrap">
+        <button class="vid-ctrl-btn tog" id="blurBtn" onclick="toggleBlur()" title="Blur background">🌫️</button>
+        <div class="vid-ctrl-label">Blur BG</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ MAIN APP ═══════════════════════ -->
+<div class="app">
+
+  <!-- Left Sidebar Nav -->
+  <nav class="left-nav">
+    <div class="nav-logo">E</div>
+    <div class="nav-divider"></div>
+    <a href="index.html" class="nav-icon-btn btn-tooltip" id="navHome" data-tip="Dashboard" title="Back to Dashboard">🏠</a>
+    <button class="nav-icon-btn active" title="Chat">💬</button>
+    <button class="nav-icon-btn btn-tooltip" data-tip="Activities" title="Activities">🎯</button>
+    <button class="nav-icon-btn btn-tooltip" data-tip="Memory" title="Memory">🧠</button>
+    <button class="nav-icon-btn btn-tooltip" data-tip="Diary" title="Diary">📔</button>
+    <a href="profile.html" class="nav-icon-btn btn-tooltip" data-tip="Profile" title="Profile">👤</a>
+    <div class="nav-spacer"></div>
+    <button class="nav-icon-btn btn-tooltip" data-tip="Settings" title="Settings">⚙️</button>
+    <div class="nav-user-av" id="navUserAv" title="My Account">?</div>
+  </nav>
+
+  <!-- Main -->
+  <div class="main-area">
+
+    <!-- ── AVATAR PANEL ── -->
+    <div class="avatar-panel" id="avatarPanel">
+
+      <!-- Top nav -->
+      <div class="chat-nav">
+        <div class="chat-nav-left">
+          <a href="index.html" class="back-btn" title="Back to Dashboard">←</a>
+          <div class="ai-identity">
+            <div class="ai-identity-av">🤖</div>
+            <div class="ai-name-wrap">
+              <span class="ai-name-text" id="aiNameDisplay">Emora</span>
+              <span class="ai-status">Always here for you</span>
+            </div>
+          </div>
+        </div>
+        <div class="chat-nav-tabs">
+          <span class="nav-tab active">Chat</span>
+          <span class="nav-tab">Activities</span>
+          <span class="nav-tab">Memory</span>
+          <span class="nav-tab">Diary</span>
+        </div>
+        <div class="chat-nav-right">
+          <button class="nav-action-btn voice-call-btn btn-tooltip" data-tip="Voice Call" onclick="startVoiceCall()" title="Start voice call">🎙️</button>
+          <button class="nav-action-btn video-call-btn btn-tooltip" data-tip="Video Call" onclick="startVideoCall()" title="Start video call">📹</button>
+          <button class="nav-action-btn btn-tooltip" data-tip="More" title="More options">⋮</button>
+        </div>
+      </div>
+
+      <!-- Big Avatar -->
+      <div class="big-avatar-wrap">
+        <div class="big-avatar-stage">
+          <div class="av-ring av-ring-1"></div>
+          <div class="av-ring av-ring-2"></div>
+          <div class="av-ring av-ring-3"></div>
+          <div class="av-glow-orb"></div>
+          <div class="av-body" id="mainAvatarBody">
+            <div class="av-face-eyes">
+              <div class="av-eye-dot"></div>
+              <div class="av-eye-dot"></div>
+            </div>
+            <div class="av-smile" id="mainSmile"></div>
+          </div>
+        </div>
+        <div class="av-emotion-tag" id="avatarEmotionTag">😊 Feeling calm</div>
+        <div class="av-status-row">
+          <div class="av-status-dot"></div>
+          <span id="avStatusText">Listening with empathy</span>
+        </div>
+      </div>
+
+      <!-- Call action buttons at bottom -->
+      <div class="call-actions">
+        <button class="call-pill voice" onclick="startVoiceCall()" id="voiceCallBtn">
+          <span>🎙️</span> Voice Call
+        </button>
+        <button class="call-pill video" onclick="startVideoCall()" id="videoCallBtn">
+          <span>📹</span> Video Call
+        </button>
+      </div>
+
+      <div class="notice-bar">Emora is an AI and cannot provide medical advice. In a crisis, seek expert help.</div>
+    </div>
+
+    <!-- ── CHAT PANEL ── -->
+    <div class="chat-panel">
+      <div class="chat-panel-header">
+        <span>💬 Messages <span class="chat-count" id="msgCount">0</span></span>
+        <span style="font-size:11px;color:var(--text3);font-weight:400;text-transform:none;">🔐 Encrypted</span>
+      </div>
+
+      <!-- Messages -->
+      <div class="chat-messages" id="chatMessages"></div>
+
+      <!-- Typing indicator -->
+      <div class="typing-row hidden" id="typingRow">
+        <div class="typing-av">🤖</div>
+        <div class="typing-dots">
+          <span></span><span></span><span></span>
+        </div>
+      </div>
+
+      <!-- Suggestions -->
+      <div class="suggestions-bar" id="suggestionsBar">
+        <button class="sug-chip" data-text="I've been feeling really anxious lately.">😰 I'm anxious</button>
+        <button class="sug-chip" data-text="I'm feeling so happy today!">😄 I'm happy</button>
+        <button class="sug-chip" data-text="I feel lonely and disconnected.">💙 Feeling lonely</button>
+        <button class="sug-chip" data-text="Can you help me with a breathing exercise?">🧘 Help me breathe</button>
+        <button class="sug-chip" data-text="I need some motivation right now.">💪 Motivate me</button>
+      </div>
+
+      <!-- Composer -->
+      <div class="composer-area">
+        <div class="composer-box">
+          <button class="comp-icon-btn" id="voiceInputBtn" title="Voice input" onclick="promptVoiceInput()">🎤</button>
+          <textarea id="msgInput" rows="1" maxlength="2000" placeholder="Talk to Emora... I'm here 💙" autocomplete="off"></textarea>
+          <button class="comp-icon-btn red" title="Attach image">🖼️</button>
+          <button class="send-btn" id="sendMsgBtn" title="Send">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
+              <path d="M22 2L11 13" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M22 2L15 22L11 13L2 9L22 2Z" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+        </div>
+        <div class="composer-meta">
+          <span>🛡️ Private & encrypted</span>
+          <span>🤖 Multimodal AI</span>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /main-area -->
+</div><!-- /app -->
+
+<!-- ═══════════════════════ SCRIPTS ═══════════════════════ -->
+<script>
+/* ─── Auth Guard (redirect to login if no session) ─── */
+(function(){
+  try{
+    const session = localStorage.getItem('emora_session');
+    const hasUser = localStorage.getItem('emora_has_user');
+    if (session || hasUser) return;
+    window.location.replace('auth.html');
+  } catch(e) {}
+})();
+
+/* ─── Session / Name loading ─────────────────────── */
+(function(){
+  try{
+    const s = JSON.parse(localStorage.getItem('emora_session')||'{}');
+    const name = (s.name||s.email||'You');
+    const first = name.split(' ')[0].split('@')[0];
+    const init = first.charAt(0).toUpperCase();
+    const av = document.getElementById('navUserAv');
+    if(av) av.textContent = init;
+    const comp = JSON.parse(localStorage.getItem('emora_companion')||'{}');
+    if(comp.name){
+      document.getElementById('aiNameDisplay').textContent = comp.name;
+    }
+    if(comp.emoji){
+      document.querySelector('.ai-identity-av').textContent = comp.emoji;
+      document.querySelector('.vcall-avatar').innerHTML = `
+        <div class="vcall-ripple"></div><div class="vcall-ripple"></div><div class="vcall-ripple"></div>
+        <span>${comp.emoji}</span>`;
+      document.querySelector('.ai-video-avatar').textContent = comp.emoji;
+    }
+  }catch(e){}
+})();
+
+/* ─── Chat State ─────────────────────────────────── */
+let messageCount = 0;
+let voiceTimer = null, videoTimer = null;
+let voiceSeconds = 0, videoSeconds = 0;
+let isMuted = false, isCamOn = false, isVideoMuted = false, isBlurred = false, isSpeakerOn = true;
+let localStream = null;
+let voiceStream = null;
+let audioMeter = { ctx: null, analyser: null, source: null, raf: null };
+let videoAudioMeter = { ctx: null, analyser: null, source: null, raf: null };
+let aiSpeakInterval = null;
+let recognition = null;
+let recognitionMode = null;
+let recognitionRestartAllowed = false;
+let isAISpeaking = false;
+let lastBackendOk = true;
+
+const chatMessages = document.getElementById('chatMessages');
+const typingRow = document.getElementById('typingRow');
+const msgCountEl = document.getElementById('msgCount');
+const sugBar = document.getElementById('suggestionsBar');
+
+/* ─── AI Responses ───────────────────────────────── */
+const aiResponses = [
+  {t:"anxious", r:"I hear you. Anxiety can feel overwhelming, but you're not alone. Let's try a simple breathing exercise together — breathe in for 4 seconds, hold for 4, then slowly exhale for 6. How does that feel?"},
+  {t:"happy", r:"That's wonderful to hear! 😊 Happiness is such a beautiful feeling — what's making you feel so good today? I'd love to celebrate with you!"},
+  {t:"lonely", r:"Feeling lonely can be really tough, and I'm so glad you reached out. I'm here with you right now, and you have my full attention. 💙 Tell me more about what's been going on?"},
+  {t:"sad", r:"I'm really sorry you're feeling this way. It takes courage to share your feelings, and I want you to know that what you're going through matters. Would you like to talk about it?"},
+  {t:"stress", r:"Stress can really wear you down. Let's take a moment together — close your eyes if you can, take a deep breath, and let's figure this out step by step. What's been bothering you the most?"},
+  {t:"breath", r:"Absolutely! Let's do box breathing together. Inhale slowly for 4 counts... hold for 4... exhale gently for 4... hold for 4. You're doing great. 🌿"},
+  {t:"motiv", r:"You've got this! 💪 Remember, every big journey starts with a single step. What's one small thing you can do right now to move forward? I believe in you!"},
+  {t:"default", r:"Thank you for sharing that with me. I'm here to listen, and I care deeply about how you're feeling. Tell me more — what's on your heart right now? 💙"},
+];
+
+function getAIResponse(text){
+  const t = text.toLowerCase();
+  for(const pair of aiResponses){
+    if(t.includes(pair.t)) return pair.r;
+  }
+  return aiResponses[aiResponses.length-1].r;
+}
+
+function formatTime(d=new Date()){
+  return d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+}
+
+function addMessage(text, role='user'){
+  if (sugBar) sugBar.style.display = 'none';
+  const comp = JSON.parse(localStorage.getItem('emora_companion')||'{}');
+  const row = document.createElement('div');
+  row.className = `msg-row ${role}`;
+  const isAI = role === 'ai';
+  const avContent = isAI ? (comp.emoji||'🤖') : '👤';
+  const emotions = ['😊 Calm','🔵 Empathy','✨ Joy','💙 Care'];
+  const randEmo = emotions[Math.floor(Math.random()*emotions.length)];
+  row.innerHTML = `
+    <div class="msg-av">${avContent}</div>
+    <div class="msg-content-wrap">
+      <div class="bubble">${text}</div>
+      <div class="msg-meta">
+        <span>${formatTime()}</span>
+        ${isAI ? `<span class="msg-tag">${randEmo}</span>` : ''}
+      </div>
+      ${isAI ? `<div class="msg-reactions"><button class="reaction-btn" onclick="this.style.background='rgba(139,92,246,0.2)'">👍</button><button class="reaction-btn">❤️</button><button class="reaction-btn more">•••</button></div>` : ''}
+    </div>`;
+  chatMessages.appendChild(row);
+  chatMessages.scrollTop = chatMessages.scrollHeight;
+  messageCount++;
+  msgCountEl.textContent = messageCount;
+  // animate avatar
+  pulseBigAvatar();
+}
+
+function pulseBigAvatar(){
+  const body = document.getElementById('mainAvatarBody');
+  body.style.transform = 'scale(1.06)';
+  setTimeout(()=>body.style.transform='scale(1)',400);
+}
+
+function showTyping(){
+  if (!typingRow) return;
+  typingRow.classList.remove('hidden');
+  chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+function hideTyping(){ if (typingRow) typingRow.classList.add('hidden'); }
+
+function sanitizeReply(text){
+  return typeof text === 'string' && text.trim()
+    ? text
+    : "I'm here with you. Could you say that one more time?";
+}
+
+function getRecognitionCtor(){
+  return window.SpeechRecognition || window.webkitSpeechRecognition || null;
+}
+
+function stopRecognition(){
+  recognitionRestartAllowed = false;
+  if (recognition) {
+    try { recognition.onend = null; } catch(e) {}
+    try { recognition.stop(); } catch(e) {}
+    recognition = null;
+  }
+  recognitionMode = null;
+}
+
+function updateCallListeningState(mode, stateText){
+  if (mode === 'voice') {
+    const el = document.getElementById('vcallStatus');
+    if (el) el.textContent = stateText;
+  } else if (mode === 'video') {
+    const el = document.getElementById('videoCallSub');
+    if (el) el.textContent = stateText;
+  }
+}
+
+function setMainStatus(text){
+  const avStatusEl = document.getElementById('avStatusText');
+  if (avStatusEl) avStatusEl.textContent = text;
+}
+
+function setAISpeakLabel(text){
+  const el = document.getElementById('aiSpeakLabel');
+  if (el) el.textContent = text;
+}
+
+function backendBadge(){
+  return lastBackendOk ? '' : ' (offline fallback)';
+}
+
+function speakText(text, mode){
+  return new Promise(resolve => {
+    if (!('speechSynthesis' in window) || !isSpeakerOn) return resolve();
+    try { window.speechSynthesis.cancel(); } catch(e) {}
+
+    const utterance = new SpeechSynthesisUtterance(sanitizeReply(text).replace(/<[^>]*>/g, ''));
+    utterance.rate = 1;
+    utterance.pitch = 1.02;
+    utterance.volume = 1;
+    isAISpeaking = true;
+
+    updateCallListeningState(mode, mode === 'voice' ? '🟣 Emora is speaking...' : '🟣 Connected · Emora speaking');
+    setMainStatus('Speaking with care...');
+    setAISpeakLabel('Emora is speaking...');
+
+    utterance.onend = () => {
+      isAISpeaking = false;
+      setMainStatus('Listening with empathy');
+      setAISpeakLabel('Emora is listening...');
+      if (mode === 'voice' && document.getElementById('voiceCallOverlay')?.classList.contains('open')) {
+        updateCallListeningState('voice', '🟢 Listening...' + backendBadge());
+        beginCallRecognition('voice');
+      } else if (mode === 'video' && document.getElementById('videoCallOverlay')?.classList.contains('open')) {
+        updateCallListeningState('video', '🟢 Connected · Listening' + backendBadge());
+        beginCallRecognition('video');
+      }
+      resolve();
+    };
+    utterance.onerror = () => {
+      isAISpeaking = false;
+      resolve();
+    };
+
+    window.speechSynthesis.speak(utterance);
+  });
+}
+
+function beginCallRecognition(mode){
+  const SR = getRecognitionCtor();
+  if (!SR) {
+    updateCallListeningState(mode, mode === 'voice' ? 'Speech recognition unavailable' : 'Connected · Speech unavailable');
+    setMainStatus('Voice features unavailable in this browser');
+    return;
+  }
+  if ((mode === 'voice' && isMuted) || (mode === 'video' && isVideoMuted)) return;
+  if (isAISpeaking) return;
+
+  stopRecognition();
+  recognitionMode = mode;
+  recognitionRestartAllowed = true;
+  recognition = new SR();
+  recognition.lang = 'en-US';
+  recognition.interimResults = false;
+  recognition.continuous = false;
+
+  recognition.onstart = () => {
+    updateCallListeningState(mode, mode === 'voice' ? '🟢 Listening...' + backendBadge() : '🟢 Connected · Listening' + backendBadge());
+    setMainStatus('Listening…');
+    setAISpeakLabel('Emora is listening...');
+  };
+
+  recognition.onresult = async (e) => {
+    const transcript = Array.from(e.results).map(r => r[0]?.transcript || '').join(' ').trim();
+    if (!transcript) return;
+    recognitionRestartAllowed = false;
+    try { recognition.stop(); } catch(err) {}
+    updateCallListeningState(mode, mode === 'voice' ? 'Processing your voice...' : 'Connected · Processing voice');
+    await sendMessage(transcript, { source: mode, speakReply: true });
+  };
+
+  recognition.onerror = (e) => {
+    if (!recognitionRestartAllowed) return;
+    const err = e?.error || recognition?.error || '';
+    const blocked = (err === 'not-allowed' || err === 'service-not-allowed');
+    if (blocked) {
+      updateCallListeningState(mode, mode === 'voice' ? '🎙️ Microphone blocked (allow mic permission)' : '🎙️ Mic blocked (allow permission)');
+      setMainStatus('Microphone permission blocked');
+      recognitionRestartAllowed = false;
+      return;
+    }
+    updateCallListeningState(mode, mode === 'voice' ? 'Mic issue - retrying...' : 'Connected · Retrying mic');
+    setMainStatus('Having trouble hearing you (retrying)…');
+  };
+
+  recognition.onend = () => {
+    const shouldRestart = recognitionRestartAllowed
+      && !isAISpeaking
+      && ((mode === 'voice' && document.getElementById('voiceCallOverlay')?.classList.contains('open') && !isMuted)
+      || (mode === 'video' && document.getElementById('videoCallOverlay')?.classList.contains('open') && !isVideoMuted));
+
+    if (shouldRestart) {
+      setTimeout(() => beginCallRecognition(mode), 250);
+    }
+  };
+
+  try {
+    recognition.start();
+  } catch(e) {}
+}
+
+async function fetchAIReply(text){
+  const s = JSON.parse(localStorage.getItem('emora_session')||'{}');
+  const sessionId = s.sessionId || 'sess_' + Math.random().toString(36).substr(2,9);
+  s.sessionId = sessionId;
+  localStorage.setItem('emora_session', JSON.stringify(s));
+
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 12000);
+
+  try {
+    const response = await fetch('http://127.0.0.1:8000/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: text, session_id: sessionId }),
+      signal: controller.signal
+    });
+
+    if(!response.ok) throw new Error("Backend connection failed");
+    const data = await response.json();
+    lastBackendOk = true;
+    return {
+      reply: sanitizeReply(data.response),
+      emotionDetailed: data.emotion_detailed || data.emotion || null
+    };
+  } catch (e) {
+    lastBackendOk = false;
+    throw e;
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
+
+async function sendMessage(text, options = {}){
+  if(!text.trim()) return '';
+  const { source = 'chat', speakReply = false } = options;
+  addMessage(text,'user');
+  showTyping();
+  setMainStatus('Thinking…');
+  if (source === 'voice') updateCallListeningState('voice', 'Thinking…' + backendBadge());
+  if (source === 'video') updateCallListeningState('video', 'Connected · Thinking…' + backendBadge());
+  if (source === 'video') setAISpeakLabel('Emora is thinking…');
+
+  let reply = '';
+  let emotionDetailed = null;
+
+  try {
+    const result = await fetchAIReply(text);
+    reply = result.reply;
+    emotionDetailed = result.emotionDetailed;
+  } catch(e) {
+    console.error("Chat API Error:", e);
+    await sleep(800 + Math.random()*500);
+    reply = sanitizeReply(getAIResponse(text));
+  }
+
+  hideTyping();
+  addMessage(reply, 'ai');
+
+  const avatarEmo = document.getElementById('avatarEmotionTag');
+  if(avatarEmo && emotionDetailed) {
+    avatarEmo.textContent = `🔵 Feeling ${emotionDetailed}`;
+  }
+
+  setMainStatus(source === 'chat' ? 'Listening with empathy' : 'In conversation with you');
+  if (speakReply) await speakText(reply, source);
+  setMainStatus('Listening with empathy');
+  return reply;
+}
+
+function sleep(ms){return new Promise(r=>setTimeout(r,ms));}
+
+function stopStream(stream){
+  if (!stream) return;
+  try { stream.getTracks().forEach(t => t.stop()); } catch(e) {}
+}
+
+function createAudioMeter(stream, barsSelector, store){
+  // Use WebAudio to read mic level and animate bars. This makes the call feel "alive".
+  const AC = window.AudioContext || window.webkitAudioContext;
+  if (!AC || !stream) return;
+  try {
+    const ctx = new AC();
+    const analyser = ctx.createAnalyser();
+    analyser.fftSize = 512;
+    analyser.smoothingTimeConstant = 0.85;
+    const source = ctx.createMediaStreamSource(stream);
+    source.connect(analyser);
+
+    const data = new Uint8Array(analyser.frequencyBinCount);
+    const bars = Array.from(document.querySelectorAll(barsSelector));
+
+    const tick = () => {
+      analyser.getByteTimeDomainData(data);
+      let sum = 0;
+      for (let i = 0; i < data.length; i++) {
+        const v = (data[i] - 128) / 128;
+        sum += v * v;
+      }
+      const rms = Math.sqrt(sum / data.length);
+      const boost = Math.min(1, rms * 3.2);
+
+      bars.forEach((bar, i) => {
+        if (!bar) return;
+        const jitter = (Math.sin(Date.now() / 180 + i) + 1) / 2;
+        const scale = 0.35 + boost * (0.9 + jitter * 0.6);
+        bar.style.transformOrigin = 'bottom';
+        bar.style.transform = `scaleY(${scale.toFixed(3)})`;
+      });
+
+      store.raf = requestAnimationFrame(tick);
+    };
+
+    store.ctx = ctx;
+    store.analyser = analyser;
+    store.source = source;
+    store.raf = requestAnimationFrame(tick);
+  } catch(e) {}
+}
+
+function stopAudioMeter(store, barsSelector){
+  try { if (store?.raf) cancelAnimationFrame(store.raf); } catch(e) {}
+  store.raf = null;
+  try { store?.source?.disconnect?.(); } catch(e) {}
+  store.source = null;
+  store.analyser = null;
+  try { store?.ctx?.close?.(); } catch(e) {}
+  store.ctx = null;
+  try {
+    document.querySelectorAll(barsSelector).forEach(bar => {
+      bar.style.transform = '';
+      bar.style.transformOrigin = '';
+    });
+  } catch {}
+}
+
+/* ─── Init welcome message ───────────────────────── */
+window.addEventListener('DOMContentLoaded',()=>{
+  setTimeout(()=>{
+    const comp = JSON.parse(localStorage.getItem('emora_companion')||'{}');
+    const s = JSON.parse(localStorage.getItem('emora_session')||'{}');
+    const user = (s.name||s.email||'friend').split(' ')[0].split('@')[0];
+    const aiName = comp.name || 'Emora';
+    addMessage(`Hi ${user}! 👋 Thanks for coming to talk with me today. I'm ${aiName}, and I'm here to listen, support, and be your companion. How are you feeling right now? 💙`,'ai');
+  },600);
+});
+
+/* ─── Send handlers ──────────────────────────────── */
+document.getElementById('sendMsgBtn').addEventListener('click',()=>{
+  const inp = document.getElementById('msgInput');
+  const text = inp.value.trim();
+  if(text){
+    sendMessage(text);
+    inp.value='';
+    inp.style.height='auto';
+  }
+});
+document.getElementById('msgInput').addEventListener('keydown',(e)=>{
+  if(e.key==='Enter'&&!e.shiftKey){
+    e.preventDefault();
+    document.getElementById('sendMsgBtn').click();
+  }
+});
+document.getElementById('msgInput').addEventListener('input',function(){
+  this.style.height='auto';
+  this.style.height=Math.min(this.scrollHeight,120)+'px';
+});
+document.querySelectorAll('.sug-chip').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    const text = btn.getAttribute('data-text');
+    sendMessage(text);
+  });
+});
+
+/* ─── VOICE CALL ─────────────────────────────────── */
+function startVoiceCall(){
+  const overlay = document.getElementById('voiceCallOverlay');
+  overlay.classList.add('open');
+  stopRecognition();
+  try { if ('speechSynthesis' in window) window.speechSynthesis.cancel(); } catch(e) {}
+  voiceSeconds = 0;
+  document.getElementById('vcallTimer').textContent = '00:00';
+  document.getElementById('vcallStatus').textContent = 'Requesting microphone permission...';
+  // Pause waveform during connecting
+  document.querySelectorAll('#voiceWaveform .wave-bar').forEach(b=>b.classList.add('paused'));
+
+  // IMPORTANT: request mic on the user gesture (click), then start SpeechRecognition.
+  // This reliably triggers permissions and lets us animate waveform from actual mic input.
+  (async () => {
+    stopStream(voiceStream);
+    voiceStream = null;
+    stopAudioMeter(audioMeter, '#voiceWaveform .wave-bar');
+    try {
+      voiceStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+      voiceStream.getAudioTracks().forEach(t => t.enabled = !isMuted);
+      createAudioMeter(voiceStream, '#voiceWaveform .wave-bar', audioMeter);
+      document.querySelectorAll('#voiceWaveform .wave-bar').forEach(b=>b.classList.remove('paused'));
+      beginCallRecognition('voice');
+    } catch (err) {
+      updateCallListeningState('voice', '🎙️ Allow microphone permission');
+      setMainStatus('Microphone permission needed');
+    }
+  })();
+
+  setTimeout(()=>{
+    // If recognition started, it will update the status itself.
+    // Keep a nice fallback "connected" status for non-SR browsers.
+    if (!getRecognitionCtor()) {
+      document.getElementById('vcallStatus').textContent = '🟢 Connected · Voice call' + backendBadge();
+    }
+    document.querySelectorAll('#voiceWaveform .wave-bar').forEach(b=>b.classList.remove('paused'));
+    voiceTimer = setInterval(()=>{
+      voiceSeconds++;
+      document.getElementById('vcallTimer').textContent = fmtCallTime(voiceSeconds);
+    },1000);
+
+    // Engage the user with a spoken opener once the call UI is ready.
+    const s = JSON.parse(localStorage.getItem('emora_session')||'{}');
+    const user = (s.name||s.email||'friend').split(' ')[0].split('@')[0];
+    const comp = JSON.parse(localStorage.getItem('emora_companion')||'{}');
+    const aiName = comp.name || 'Emora';
+    speakText(`Hi ${user}. I’m ${aiName}. I’m here with you. Tell me what’s on your mind.`, 'voice');
+  },900);
+}
+
+function endVoiceCall(){
+  const overlay = document.getElementById('voiceCallOverlay');
+  overlay.classList.remove('open');
+  stopRecognition();
+  try { if ('speechSynthesis' in window) window.speechSynthesis.cancel(); } catch(e) {}
+  clearInterval(voiceTimer);
+  voiceTimer = null;
+  stopAudioMeter(audioMeter, '#voiceWaveform .wave-bar');
+  stopStream(voiceStream);
+  voiceStream = null;
+  isMuted = false;
+  document.getElementById('muteBtn').textContent = '🎤';
+  document.getElementById('muteBtn').classList.remove('active');
+  addMessage(`📞 Voice call ended · ${fmtCallTime(voiceSeconds)}`,'ai');
+}
+
+function toggleMute(){
+  isMuted = !isMuted;
+  const btn = document.getElementById('muteBtn');
+  btn.textContent = isMuted ? '🔇' : '🎤';
+  btn.classList.toggle('active', isMuted);
+  document.querySelectorAll('#voiceWaveform .wave-bar').forEach(b=>{
+    b.style.animationPlayState = isMuted ? 'paused' : 'running';
+  });
+  if (voiceStream) voiceStream.getAudioTracks().forEach(t => t.enabled = !isMuted);
+  if (isMuted) {
+    stopRecognition();
+    updateCallListeningState('voice', '🔇 Muted');
+  } else if (document.getElementById('voiceCallOverlay')?.classList.contains('open')) {
+    beginCallRecognition('voice');
+  }
+}
+function toggleSpeaker(){
+  isSpeakerOn = !isSpeakerOn;
+  const btn = document.getElementById('speakerBtn');
+  btn.textContent = isSpeakerOn ? '🔊' : '🔇';
+  if (!isSpeakerOn && 'speechSynthesis' in window) {
+    try { window.speechSynthesis.cancel(); } catch(e) {}
+    isAISpeaking = false;
+  }
+}
+
+/* ─── VIDEO CALL ─────────────────────────────────── */
+async function startVideoCall(){
+  const overlay = document.getElementById('videoCallOverlay');
+  overlay.classList.add('open');
+  stopRecognition();
+  try { if ('speechSynthesis' in window) window.speechSynthesis.cancel(); } catch(e) {}
+  videoSeconds = 0;
+  document.getElementById('videoTimer').textContent = '00:00';
+  document.getElementById('videoCallSub').textContent = 'Requesting camera/mic permission...';
+  document.getElementById('videoConnecting').classList.remove('gone');
+
+  // Request camera
+  try{
+    localStream = await navigator.mediaDevices.getUserMedia({video:true,audio:true});
+    const localVid = document.getElementById('localVideo');
+    localVid.srcObject = localStream;
+    document.getElementById('pipPlaceholder').style.display='none';
+    isCamOn = true;
+    isVideoMuted = false;
+    // Make controls match actual state
+    const camBtn = document.getElementById('vidCamBtn');
+    if (camBtn) { camBtn.classList.remove('off'); camBtn.textContent = '📹'; }
+    const micBtn = document.getElementById('vidMuteBtn');
+    if (micBtn) { micBtn.classList.remove('off'); micBtn.textContent = '🎤'; }
+
+    // Animate the wave bars from real mic input (engaging)
+    stopAudioMeter(videoAudioMeter, '#aiSpeakWave .ai-wave-bar');
+    createAudioMeter(localStream, '#aiSpeakWave .ai-wave-bar', videoAudioMeter);
+
+    beginCallRecognition('video');
+  }catch(err){
+    console.warn('Camera unavailable:',err.message);
+    setAISpeakLabel('Camera/mic permission needed');
+    updateCallListeningState('video', '🎥 Allow camera/mic permission (voice still works)');
+    // Try mic-only so "video call" can still engage as a voice call
+    try {
+      localStream = await navigator.mediaDevices.getUserMedia({video:false,audio:true});
+      stopAudioMeter(videoAudioMeter, '#aiSpeakWave .ai-wave-bar');
+      createAudioMeter(localStream, '#aiSpeakWave .ai-wave-bar', videoAudioMeter);
+      beginCallRecognition('video');
+    } catch(_) {}
+  }
+
+  setTimeout(()=>{
+    document.getElementById('videoConnecting').classList.add('gone');
+    // If SR is available it will set "Connected · Listening"; otherwise show a generic connected label
+    if (!getRecognitionCtor()) document.getElementById('videoCallSub').textContent = '🟢 Connected · HD';
+    videoTimer = setInterval(()=>{
+      videoSeconds++;
+      document.getElementById('videoTimer').textContent = fmtCallTime(videoSeconds);
+    },1000);
+    // random speaking animation
+    startAISpeakAnimation();
+
+    // Spoken opener for engagement
+    const s = JSON.parse(localStorage.getItem('emora_session')||'{}');
+    const user = (s.name||s.email||'friend').split(' ')[0].split('@')[0];
+    const comp = JSON.parse(localStorage.getItem('emora_companion')||'{}');
+    const aiName = comp.name || 'Emora';
+    speakText(`Hi ${user}. I’m ${aiName}. How are you feeling right now?`, 'video');
+  },2200);
+}
+
+function endVideoCall(){
+  const overlay = document.getElementById('videoCallOverlay');
+  overlay.classList.remove('open');
+  stopRecognition();
+  try { if ('speechSynthesis' in window) window.speechSynthesis.cancel(); } catch(e) {}
+  clearInterval(videoTimer);
+  videoTimer = null;
+  if (aiSpeakInterval) { clearInterval(aiSpeakInterval); aiSpeakInterval = null; }
+  if(localStream){
+    localStream.getTracks().forEach(t=>t.stop());
+    localStream = null;
+  }
+  stopAudioMeter(videoAudioMeter, '#aiSpeakWave .ai-wave-bar');
+  document.getElementById('localVideo').srcObject = null;
+  document.getElementById('pipPlaceholder').style.display='flex';
+  isCamOn = false; isVideoMuted = false; isBlurred = false;
+  const localVid = document.getElementById('localVideo');
+  if (localVid) localVid.style.filter = '';
+  document.getElementById('videoConnecting').classList.remove('gone');
+  addMessage(`📹 Video call ended · ${fmtCallTime(videoSeconds)}`,'ai');
+}
+
+function toggleCamera(){
+  if(!localStream) return;
+  isCamOn = !isCamOn;
+  localStream.getVideoTracks().forEach(t=>t.enabled=isCamOn);
+  const btn = document.getElementById('vidCamBtn');
+  btn.classList.toggle('off',!isCamOn);
+  btn.textContent = isCamOn ? '📹' : '📵';
+}
+function toggleVideoMute(){
+  isVideoMuted = !isVideoMuted;
+  if(localStream) localStream.getAudioTracks().forEach(t=>t.enabled=!isVideoMuted);
+  const btn = document.getElementById('vidMuteBtn');
+  btn.classList.toggle('off',isVideoMuted);
+  btn.textContent = isVideoMuted ? '🔇' : '🎤';
+  if (isVideoMuted) {
+    stopRecognition();
+    updateCallListeningState('video', '🔇 Connected · Mic muted');
+  } else if (document.getElementById('videoCallOverlay')?.classList.contains('open')) {
+    beginCallRecognition('video');
+  }
+}
+function toggleBlur(){
+  isBlurred = !isBlurred;
+  const btn = document.getElementById('blurBtn');
+  btn.classList.toggle('off',isBlurred);
+  const localVid = document.getElementById('localVideo');
+  if (localVid) localVid.style.filter = isBlurred ? 'blur(8px) saturate(0.9)' : '';
+}
+function addVideoMsgToChatLog(){
+  addMessage('(Sent a message during video call 📹)','user');
+}
+function promptVoiceInput(){
+  if(!('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)){
+    alert('Voice input not supported in this browser. Try Chrome!');return;
+  }
+  stopRecognition();
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  const rec = new SR();
+  rec.lang='en-US';rec.interimResults=false;
+  rec.onresult=(e)=>{
+    const t = e.results[0][0].transcript;
+    const inp = document.getElementById('msgInput');
+    if (!inp) return;
+    inp.value = t;
+    inp.dispatchEvent(new Event('input'));
+  };
+  rec.onerror=(e)=>console.warn(e);
+  rec.start();
+}
+
+function startAISpeakAnimation(){
+  const label = document.getElementById('aiSpeakLabel');
+  const phrases = ['Emora is listening...','Emora is thinking...','Emora is speaking...','Processing emotions...','Emora is with you...'];
+  let i = 0;
+  if (aiSpeakInterval) clearInterval(aiSpeakInterval);
+  aiSpeakInterval = setInterval(()=>{
+    if(label) label.textContent = phrases[i%phrases.length];
+    i++;
+  },3000);
+}
+
+/* ─── Utilities ──────────────────────────────────── */
+function fmtCallTime(secs){
+  const m = String(Math.floor(secs/60)).padStart(2,'0');
+  const s = String(secs%60).padStart(2,'0');
+  return `${m}:${s}`;
+}
+
+// Click outside modals to maybe close
+document.getElementById('voiceCallOverlay').addEventListener('click',(e)=>{
+  if(e.target === document.getElementById('voiceCallOverlay')) endVoiceCall();
+});
+
+document.getElementById('videoCallOverlay').addEventListener('click',(e)=>{
+  if(e.target === document.getElementById('videoCallOverlay')) endVideoCall();
+});
+
+/* ─── Make remaining buttons functional ───────────── */
+function toast(message){
+  const t = document.createElement('div');
+  t.textContent = message;
+  t.style.cssText = 'position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:rgba(8,4,20,0.92);border:1px solid rgba(139,92,246,0.35);box-shadow:0 10px 40px rgba(0,0,0,0.55);backdrop-filter:blur(18px);color:#e2e8f0;padding:10px 14px;border-radius:9999px;font-size:12px;z-index:9999;max-width:min(92vw,520px);text-align:center;';
+  document.body.appendChild(t);
+  setTimeout(()=>{ t.style.opacity='0'; t.style.transition='opacity 0.25s ease'; }, 2200);
+  setTimeout(()=>t.remove(), 2600);
+}
+
+function safeLogout(){
+  try{
+    localStorage.removeItem('emora_session');
+    localStorage.removeItem('emora-ai-state-v2');
+  }catch(e){}
+  window.location.href = 'auth.html';
+}
+
+function setActiveNavByTip(tip){
+  document.querySelectorAll('.left-nav .nav-icon-btn').forEach(el=>el.classList.remove('active'));
+  const btn = document.querySelector(`.left-nav .nav-icon-btn[data-tip="${tip}"]`);
+  if (btn) btn.classList.add('active');
+}
+
+function setActiveTopTab(label){
+  document.querySelectorAll('.chat-nav-tabs .nav-tab').forEach(t=>t.classList.remove('active'));
+  const tab = Array.from(document.querySelectorAll('.chat-nav-tabs .nav-tab')).find(t=>t.textContent.trim()===label);
+  if (tab) tab.classList.add('active');
+}
+
+function openSection(label){
+  setActiveTopTab(label);
+  if (label !== 'Chat') {
+    toast(`${label} opened`);
+    addMessage(`✅ Opened <strong>${label}</strong>. (This section is a lightweight preview in this demo.) What would you like to do here?`,'ai');
+  }
+}
+
+// Left nav: Activities / Memory / Diary / Settings
+document.querySelectorAll('.left-nav .nav-icon-btn').forEach(el=>{
+  const tip = el.getAttribute('data-tip');
+  const isLink = el.tagName.toLowerCase() === 'a';
+  if (!tip) return;
+  if (isLink) return;
+  el.addEventListener('click', ()=>{
+    if (tip === 'Settings') {
+      toggleMoreMenu(true);
+      return;
+    }
+    setActiveNavByTip(tip);
+    openSection(tip);
+  });
+});
+
+// Top tabs (Chat / Activities / Memory / Diary)
+document.querySelectorAll('.chat-nav-tabs .nav-tab').forEach(tab=>{
+  tab.addEventListener('click', ()=> openSection(tab.textContent.trim()));
+});
+
+// “More options” (⋮) menu (also reused for Settings)
+let moreMenuEl = null;
+function buildMoreMenu(){
+  if (moreMenuEl) return moreMenuEl;
+  moreMenuEl = document.createElement('div');
+  moreMenuEl.style.cssText = 'position:fixed;inset:0;z-index:7000;background:rgba(0,0,0,0.35);backdrop-filter:blur(6px);display:none;';
+
+  const card = document.createElement('div');
+  card.style.cssText = 'position:absolute;top:64px;right:22px;width:min(320px,92vw);background:rgba(13,8,32,0.95);border:1px solid rgba(255,255,255,0.10);border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,0.6);overflow:hidden;';
+
+  const item = (label, danger=false) => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.textContent = label;
+    b.style.cssText = `width:100%;text-align:left;padding:12px 14px;font-size:13px;color:${danger ? '#fecaca' : '#e2e8f0'};background:transparent;border:0;border-bottom:1px solid rgba(255,255,255,0.08);cursor:pointer;`;
+    b.addEventListener('mouseenter', ()=>{ b.style.background = danger ? 'rgba(239,68,68,0.14)' : 'rgba(139,92,246,0.14)'; });
+    b.addEventListener('mouseleave', ()=>{ b.style.background = 'transparent'; });
+    return b;
+  };
+
+  const clearBtn = item('🧹 Clear chat');
+  clearBtn.addEventListener('click', ()=>{
+    if (chatMessages) chatMessages.innerHTML = '';
+    messageCount = 0;
+    if (msgCountEl) msgCountEl.textContent = '0';
+    if (sugBar) sugBar.style.display = '';
+    toggleMoreMenu(false);
+    toast('Chat cleared');
+  });
+
+  const exportBtn = item('⬇️ Export chat');
+  exportBtn.addEventListener('click', ()=>{
+    const lines = Array.from(document.querySelectorAll('.chat-messages .msg-row')).map(row=>{
+      const role = row.classList.contains('ai') ? 'AI' : 'You';
+      const bubble = row.querySelector('.bubble');
+      const text = bubble ? bubble.textContent.trim() : '';
+      return `${role}: ${text}`;
+    }).join('\\n');
+    const blob = new Blob([lines || ''], { type: 'text/plain;charset=utf-8' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `emora-chat-${Date.now()}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    toggleMoreMenu(false);
+    toast('Export downloaded');
+  });
+
+  const logoutBtn = item('🚪 Sign out', true);
+  logoutBtn.style.borderBottom = '0';
+  logoutBtn.addEventListener('click', ()=> safeLogout());
+
+  card.appendChild(clearBtn);
+  card.appendChild(exportBtn);
+  card.appendChild(logoutBtn);
+  moreMenuEl.appendChild(card);
+  moreMenuEl.addEventListener('click', (e)=>{ if (e.target === moreMenuEl) toggleMoreMenu(false); });
+  document.body.appendChild(moreMenuEl);
+  return moreMenuEl;
+}
+
+function toggleMoreMenu(forceOpen){
+  const el = buildMoreMenu();
+  const open = typeof forceOpen === 'boolean' ? forceOpen : (el.style.display === 'none');
+  el.style.display = open ? 'block' : 'none';
+}
+
+const moreBtn = document.querySelector('.chat-nav-right button[title="More options"]');
+if (moreBtn) moreBtn.addEventListener('click', ()=> toggleMoreMenu());
+
+// Bottom call actions are already wired via onclick; the top-right voice/video too.
+
+// Account avatar: click profile, right-click sign out
+const navUserAv = document.getElementById('navUserAv');
+if (navUserAv) {
+  navUserAv.addEventListener('click', ()=> { window.location.href = 'profile.html'; });
+  navUserAv.addEventListener('contextmenu', (e)=>{ e.preventDefault(); safeLogout(); });
+}
+
+// Attach image (🖼️)
+const attachBtn = document.querySelector('.composer-box .comp-icon-btn.red[title="Attach image"]');
+if (attachBtn) {
+  const fileInput = document.createElement('input');
+  fileInput.type = 'file';
+  fileInput.accept = 'image/*';
+  fileInput.style.display = 'none';
+  document.body.appendChild(fileInput);
+
+  attachBtn.addEventListener('click', ()=> fileInput.click());
+  fileInput.addEventListener('change', ()=>{
+    const file = fileInput.files && fileInput.files[0];
+    if (!file) return;
+    const url = URL.createObjectURL(file);
+    addMessage(`<div style="display:flex;flex-direction:column;gap:8px"><img src="${url}" alt="attachment" style="max-width:220px;border-radius:12px;border:1px solid rgba(255,255,255,0.12)"/><div style="font-size:11px;color:rgba(255,255,255,0.65)">${file.name}</div></div>`, 'user');
+    toast('Image attached');
+    fileInput.value = '';
+  });
+}
+
+// Reaction buttons (❤️ / •••) + persist
+if (chatMessages) {
+  chatMessages.addEventListener('click', (e)=>{
+    const btn = e.target.closest('.reaction-btn');
+    if (!btn) return;
+    const row = e.target.closest('.msg-row.ai');
+    if (!row) return;
+    const bubble = row.querySelector('.bubble')?.textContent?.slice(0,120) || '';
+    const key = 'emora_reactions';
+    let store = {};
+    try { store = JSON.parse(localStorage.getItem(key) || '{}'); } catch {}
+    store[bubble] = btn.textContent.trim();
+    try { localStorage.setItem(key, JSON.stringify(store)); } catch {}
+    toast(`Reaction saved: ${btn.textContent.trim()}`);
+  });
+}
+</script>
+</body>
+</html>

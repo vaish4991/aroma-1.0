@@ -1,0 +1,14 @@
+{
+	"folders": [
+		{
+			"path": "../../prototype"
+		},
+		{
+			"path": "."
+		}
+	],
+	"settings": {
+		"liveServer.settings.multiRootWorkspaceName": "eroma 3",
+		"liveServer.settings.port": 5501
+	}
+}

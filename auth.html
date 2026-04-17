@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Emora AI — Sign In</title>
+  <meta name="description" content="Sign in to Emora AI — your personal emotional intelligence companion powered by multimodal AI." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Sora:wght@400;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="auth.css" />
+</head>
+<body>
+
+  <!-- Animated background -->
+  <div class="bg-canvas" id="bgCanvas"></div>
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+  <div class="orb orb-3"></div>
+  <div class="grid-lines"></div>
+
+  <!-- INIT LOADER -->
+  <div class="init-loader" id="initLoader">
+    <div class="loader-logo">
+      <div class="loader-ring"></div>
+      <div class="loader-face">
+        <div class="lf-eye le"></div>
+        <div class="lf-eye re"></div>
+        <div class="lf-mouth"></div>
+      </div>
+    </div>
+    <p class="loader-text">Initializing Emora<span class="dots"><span>.</span><span>.</span><span>.</span></span></p>
+  </div>
+
+  <!-- MAIN SHELL -->
+  <div class="auth-shell hidden" id="authShell">
+
+    <!-- LEFT PANEL -->
+    <div class="left-panel">
+      <div class="left-inner">
+
+        <div class="brand-mark">
+          <div class="brand-logo">
+            <div class="bl-ring"></div>
+            <div class="bl-face">
+              <div class="bf-eye bfe-l"></div>
+              <div class="bf-eye bfe-r"></div>
+              <div class="bf-mouth"></div>
+            </div>
+          </div>
+          <div class="brand-text">
+            <span class="brand-name">Emora</span>
+            <span class="brand-ai">AI</span>
+          </div>
+        </div>
+
+        <div class="left-headline">
+          <h1>Your AI <span class="hl-grad">Emotional</span><br/>Intelligence<br/>Companion</h1>
+          <p class="left-sub">Understand yourself deeper. Feel heard. Grow stronger — with multimodal AI that truly listens.</p>
+        </div>
+
+        <div class="features">
+          <div class="feat">
+            <div class="feat-icon-wrap">🧠</div>
+            <div class="feat-body">
+              <strong>Multimodal Emotion AI</strong>
+              <span>CNN · BERT · RNN across text, voice & face</span>
+            </div>
+          </div>
+          <div class="feat">
+            <div class="feat-icon-wrap">💬</div>
+            <div class="feat-body">
+              <strong>Empathetic Conversations</strong>
+              <span>Evidence-based CBT, DBT & mindfulness</span>
+            </div>
+          </div>
+          <div class="feat">
+            <div class="feat-icon-wrap">🔐</div>
+            <div class="feat-body">
+              <strong>End-to-End Encrypted</strong>
+              <span>Your data, private always — AES-256</span>
+            </div>
+          </div>
+          <div class="feat">
+            <div class="feat-icon-wrap">🆘</div>
+            <div class="feat-body">
+              <strong>Crisis Intervention</strong>
+              <span>Real-time distress detection & emergency help</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="left-badges">
+          <span class="badge">🏆 Hackathon MVP 2026</span>
+          <span class="badge">⌚ Wearables Ready</span>
+          <span class="badge">🌍 24/7 Support</span>
+        </div>
+
+        <!-- Floating stat cards -->
+        <div class="stat-card sc-1">
+          <div class="sc-num">98<span>%</span></div>
+          <div class="sc-label">NLP Accuracy</div>
+        </div>
+        <div class="stat-card sc-2">
+          <div class="sc-num">5<span>k+</span></div>
+          <div class="sc-label">Users Helped</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT PANEL -->
+    <div class="right-panel">
+      <div class="auth-card" id="authCard">
+
+        <!-- Demo mode banner -->
+        <div class="demo-banner hidden" id="demoBanner">
+          <span>🔬 Demo Mode — Firebase not configured. Auth uses local storage.</span>
+          <button onclick="hideDemoBanner()" class="demo-close">✕</button>
+        </div>
+
+        <!-- Tab switcher -->
+        <div class="tabs" id="tabs">
+          <button class="tab" id="tabSignin" onclick="showLogin()">Sign In</button>
+          <button class="tab active" id="tabSignup" onclick="showSignup()">Create Account</button>
+          <div class="tab-pill" id="tabPill"></div>
+        </div>
+
+        <!-- ── SIGN UP FORM ── -->
+        <div class="form-pane" id="signupForm">
+          <div class="form-head">
+            <h2>Start your journey 🌟</h2>
+            <p>Create your free Emora account in seconds.</p>
+          </div>
+
+          <!-- Social -->
+          <div class="social-row">
+            <button class="social-btn" id="su-google" onclick="signInWithGoogle()">
+              <svg width="17" height="17" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+              Google
+            </button>
+            <button class="social-btn" id="su-github" onclick="signInWithGitHub()">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
+              GitHub
+            </button>
+          </div>
+
+          <div class="divider"><span>or sign up with email</span></div>
+
+          <div class="field">
+            <label for="su-name">Full Name</label>
+            <div class="input-box">
+              <span class="iico">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              </span>
+              <input type="text" id="su-name" placeholder="Your full name" autocomplete="name" />
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="su-email">Email Address</label>
+            <div class="input-box">
+              <span class="iico">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+              </span>
+              <input type="email" id="su-email" placeholder="you@example.com" autocomplete="email" />
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="su-pass">Password</label>
+            <div class="input-box">
+              <span class="iico">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+              </span>
+              <input type="password" id="su-pass" placeholder="Min 6 characters" autocomplete="new-password" />
+              <button class="eye-btn" type="button" onclick="toggleVis('su-pass', this)" aria-label="Toggle password">
+                <svg class="eye-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              </button>
+            </div>
+            <div class="pass-strength" id="su-strength">
+              <div class="ps-bars">
+                <div class="ps-bar" id="psb1"></div>
+                <div class="ps-bar" id="psb2"></div>
+                <div class="ps-bar" id="psb3"></div>
+                <div class="ps-bar" id="psb4"></div>
+              </div>
+              <span class="ps-label" id="psLabel"></span>
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="su-conf">Confirm Password</label>
+            <div class="input-box">
+              <span class="iico">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+              </span>
+              <input type="password" id="su-conf" placeholder="Repeat password" autocomplete="new-password" />
+              <button class="eye-btn" type="button" onclick="toggleVis('su-conf', this)" aria-label="Toggle confirm password">
+                <svg class="eye-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              </button>
+            </div>
+          </div>
+
+          <label class="check-label">
+            <input type="checkbox" id="su-agree" />
+            <span class="checkmark"></span>
+            I agree to the <a href="#" class="lnk">Privacy Policy</a> &amp; <a href="#" class="lnk">Terms</a>
+          </label>
+
+          <div class="err-box hidden" id="su-error"></div>
+
+          <button class="primary-btn" id="signupBtn" onclick="handleSignup()">
+            <span class="btn-label">Create Account</span>
+            <span class="btn-spin hidden" id="su-spin"></span>
+            <span class="btn-arrow">→</span>
+          </button>
+
+          <p class="switch-p">Already have an account? <button class="switch-btn" onclick="showLogin()">Sign In →</button></p>
+        </div>
+
+        <!-- ── LOGIN FORM ── -->
+        <div class="form-pane hidden" id="loginForm">
+          <div class="form-head">
+            <h2>Welcome back 💙</h2>
+            <p>Sign in to continue your journey with Emora.</p>
+          </div>
+
+          <!-- Social -->
+          <div class="social-row">
+            <button class="social-btn" id="li-google" onclick="signInWithGoogle()">
+              <svg width="17" height="17" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+              Google
+            </button>
+            <button class="social-btn" id="li-github" onclick="signInWithGitHub()">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
+              GitHub
+            </button>
+          </div>
+
+          <div class="divider"><span>or sign in with email</span></div>
+
+          <div class="field">
+            <label for="li-email">Email Address</label>
+            <div class="input-box">
+              <span class="iico">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+              </span>
+              <input type="email" id="li-email" placeholder="you@example.com" autocomplete="email" />
+            </div>
+          </div>
+
+          <div class="field">
+            <div class="label-row">
+              <label for="li-pass">Password</label>
+              <button class="forgot-btn" onclick="handleForgotPassword()">Forgot password?</button>
+            </div>
+            <div class="input-box">
+              <span class="iico">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+              </span>
+              <input type="password" id="li-pass" placeholder="Your password" autocomplete="current-password" />
+              <button class="eye-btn" type="button" onclick="toggleVis('li-pass', this)" aria-label="Toggle password">
+                <svg class="eye-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              </button>
+            </div>
+          </div>
+
+          <div class="err-box hidden" id="li-error"></div>
+          <div class="suc-box hidden" id="li-success"></div>
+
+          <button class="primary-btn" id="loginBtn" onclick="handleLogin()">
+            <span class="btn-label">Sign In</span>
+            <span class="btn-spin hidden" id="li-spin"></span>
+            <span class="btn-arrow">→</span>
+          </button>
+
+          <p class="switch-p">Don't have an account? <button class="switch-btn" onclick="showSignup()">Create one →</button></p>
+        </div>
+
+        <!-- ── SUCCESS SCREEN ── -->
+        <div class="form-pane hidden" id="successPane">
+          <div class="success-screen">
+            <div class="success-checkmark" id="successCheck">
+              <svg viewBox="0 0 52 52"><circle cx="26" cy="26" r="25" fill="none"/><path fill="none" d="M14 27l7 7 17-17"/></svg>
+            </div>
+            <h2 id="successTitle">Welcome!</h2>
+            <p id="successMsg">Taking you to Emora AI...</p>
+            <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+          </div>
+        </div>
+
+      </div><!-- /auth-card -->
+    </div><!-- /right-panel -->
+
+  </div><!-- /auth-shell -->
+
+  <!-- Setup modal (Firebase not configured) -->
+  <div class="modal-overlay hidden" id="setupModal">
+    <div class="modal-box">
+      <button class="modal-close" onclick="hideSetupModal()">✕</button>
+      <h3>🔧 Firebase Setup</h3>
+      <p>Enable real authentication in 2 minutes:</p>
+      <ol>
+        <li>Go to <a href="https://console.firebase.google.com" target="_blank" class="lnk">console.firebase.google.com</a></li>
+        <li>Create project → Add Web App → Copy config</li>
+        <li>Open <strong>firebase-config.js</strong> and paste your keys</li>
+        <li>Enable Email/Password, Google & GitHub in Authentication</li>
+        <li>Refresh this page</li>
+      </ol>
+      <a href="https://console.firebase.google.com" target="_blank" class="primary-btn modal-link">Open Firebase Console →</a>
+    </div>
+  </div>
+
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+  <script src="firebase-config.js"></script>
+  <script src="auth.js"></script>
+</body>
+</html>
